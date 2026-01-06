@@ -21,34 +21,60 @@ body{
   font-weight:600;
 }
 
-/* WORK AREA */
+/* WORKSPACE */
 .workspace{
   display:flex;
   justify-content:center;
   padding:20px;
 }
 
-/* MANHWA PAGE */
+/* PAGE */
 .page{
   background:white;
-  width:360px;
+  width:380px;
   min-height:90vh;
   border-radius:10px;
   box-shadow:0 10px 30px rgba(0,0,0,0.2);
-  padding:16px;
+  padding:12px;
+  position:relative;
 }
 
-/* PANEL */
-.panel{
-  border:2px dashed #ccc;
-  border-radius:8px;
-  height:220px;
-  margin-bottom:14px;
+/* PANEL AREA */
+.panel-area{
   display:flex;
-  align-items:center;
-  justify-content:center;
-  color:#999;
+  flex-wrap:wrap;
+  gap:12px;
+}
+
+/* EDITABLE PANEL */
+.panel{
+  width:100%;
+  min-height:160px;
+  border:2px dashed #bbb;
+  border-radius:8px;
+  resize:both;
+  overflow:auto;
+  padding:8px;
   font-size:0.9rem;
+  color:#666;
+  background:#fafafa;
+}
+
+.panel:focus{
+  outline:none;
+  border-color:#ff5f6d;
+}
+
+/* ADD PANEL BUTTON */
+.add-panel{
+  margin-top:14px;
+  width:100%;
+  padding:10px;
+  border:none;
+  border-radius:20px;
+  background:#ff5f6d;
+  color:white;
+  font-weight:600;
 }
 
 /* INPUT BAR */
@@ -76,7 +102,7 @@ body{
   padding:10px 16px;
   border:none;
   border-radius:20px;
-  background:#ff5f6d;
+  background:#111;
   color:white;
   font-weight:600;
 }
@@ -86,23 +112,37 @@ body{
 <body>
 
 <div class="topbar">
-  Manhwa Editor — Blank Page
+  Manhwa Editor — Free Layout
 </div>
 
 <div class="workspace">
   <div class="page">
 
-    <div class="panel">Manhwa Panel (Image will appear here)</div>
-    <div class="panel">Manhwa Panel (Image will appear here)</div>
-    <div class="panel">Manhwa Panel (Image will appear here)</div>
+    <div class="panel-area" id="panelArea">
+      <div class="panel" contenteditable="true">
+        Click here and describe the scene or leave empty
+      </div>
+    </div>
+
+    <button class="add-panel" onclick="addPanel()">+ Add Panel</button>
 
   </div>
 </div>
 
 <div class="input-bar">
-  <input type="text" placeholder="Describe the scene you want...">
+  <input type="text" placeholder="Describe scene for selected panel…">
   <button>Create</button>
 </div>
+
+<script>
+function addPanel(){
+  const panel = document.createElement("div");
+  panel.className = "panel";
+  panel.contentEditable = "true";
+  panel.textContent = "New manhwa panel";
+  document.getElementById("panelArea").appendChild(panel);
+}
+</script>
 
 </body>
 </html>
