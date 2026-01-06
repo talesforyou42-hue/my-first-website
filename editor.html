@@ -6,62 +6,52 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
+*{box-sizing:border-box}
+
+/* OLD COLOURFUL BACKGROUND */
 body{
   margin:0;
   font-family:"Segoe UI", Arial, sans-serif;
-  background:#ececec;
+  min-height:100vh;
+  background:
+    radial-gradient(circle at 10% 20%, #ff9a9e, transparent 40%),
+    radial-gradient(circle at 90% 30%, #fad0c4, transparent 40%),
+    radial-gradient(circle at 50% 80%, #fbc2eb, transparent 45%),
+    linear-gradient(135deg,#a18cd1,#fbc2eb);
+}
+
+/* Floating Card Look */
+.page-wrapper{
+  display:flex;
+  justify-content:center;
+  padding:20px;
+  width:100%;
+}
+
+.page{
+  background:white;
+  width:380px;
+  min-height:90vh;
+  border-radius:18px;
+  padding:14px;
+  box-shadow:
+    0 30px 60px rgba(0,0,0,0.25),
+    inset 0 0 0 1px rgba(255,255,255,0.6);
+  animation:float 6s ease-in-out infinite;
+}
+@keyframes float{
+  0%{transform:translateY(0)}
+  50%{transform:translateY(-10px)}
+  100%{transform:translateY(0)}
 }
 
 /* Top Bar */
 .topbar{
-  background:#111;
-  color:white;
-  padding:12px;
   text-align:center;
-  font-size:1.1rem;
-  font-weight:600;
-}
-
-/* Workspace */
-.workspace{
-  display:flex;
-  justify-content:center;
-  padding:20px;
-}
-
-/* Page Area */
-.page{
-  width:380px;
-  min-height:90vh;
-  background:white;
-  border-radius:8px;
-  box-shadow:0 0 20px rgba(0,0,0,.3);
-  padding:12px;
-  overflow-x:hidden;
-}
-
-/* Scene Line */
-.scene-line{
-  height:6px;
-  width:100%;
-  background:black;
-  border-radius:3px;
-  margin:8px 0;
-  position:relative;
-}
-
-/* Delete Scene Line Button */
-.scene-line button{
-  position:absolute;
-  right:-5px;
-  top:-10px;
-  background:red;
-  border:none;
   color:white;
-  border-radius:50%;
-  width:18px;
-  height:18px;
-  font-size:10px;
+  font-weight:700;
+  padding:18px 0;
+  font-size:1.4rem;
 }
 
 /* Panel */
@@ -69,63 +59,84 @@ body{
   width:100%;
   min-height:160px;
   border:2px solid black;
-  border-radius:4px;
-  background:#fafafa;
+  border-radius:6px;
+  background:#f9f9f9;
+  margin-bottom:14px;
   position:relative;
-  resize:vertical;
-  overflow:auto;
-  padding:8px;
-  font-size:0.9rem;
+  overflow:hidden;
+  font-size:0.95rem;
   color:#444;
+  padding-bottom:26px;
+}
+
+/* Editable writing area */
+.editor-box{
+  width:100%;
+  height:100%;
+  padding:10px;
+  outline:none;
+}
+
+/* Resize handle */
+.resize-bar{
+  position:absolute;
+  bottom:0;
+  left:0;
+  width:100%;
+  height:22px;
+  background:#ddd;
+  cursor:grab;
+  text-align:center;
+  font-size:11px;
+  color:#333;
+  user-select:none;
+  border-top:1px solid #aaa;
 }
 
 /* Delete panel button */
 .delete-panel{
   position:absolute;
-  right:6px;
-  top:6px;
+  right:8px;
+  top:8px;
   background:red;
   color:white;
   border:none;
-  font-size:10px;
-  padding:3px 5px;
+  font-size:11px;
+  padding:2px 6px;
   border-radius:4px;
 }
 
-/* Add Button */
+/* Add button */
 .add-panel{
   width:100%;
   padding:12px;
   border:none;
-  border-radius:20px;
-  background:#111;
+  border-radius:24px;
+  background:#ff5f6d;
   color:white;
-  font-weight:600;
-  margin-top:10px;
+  font-weight:700;
+  font-size:1rem;
+  margin-top:8px;
+  box-shadow:0 4px 12px rgba(0,0,0,0.2);
+}
+.add-panel:active{
+  transform:scale(.97);
 }
 </style>
 </head>
+
 <body>
 
-<div class="topbar">📜 Manhwa Editor</div>
+<div class="topbar">📜 Create Your Manhwa</div>
 
-<div class="workspace">
+<div class="page-wrapper">
   <div class="page" id="page">
 
-    <!-- First Line -->
-    <div class="scene-line">
-      <button onclick="this.parentNode.remove()">x</button>
-    </div>
-
-    <!-- First Panel -->
-    <div class="panel" contenteditable="true">
-      Write your first scene here...
+    <!-- FIRST PANEL -->
+    <div class="panel">
+      <div class="editor-box" contenteditable="true">Start your scene…</div>
+      <div class="resize-bar">⇕ resize</div>
       <button class="delete-panel" onclick="this.parentNode.remove()">x</button>
-    </div>
-
-    <!-- Last Line -->
-    <div class="scene-line">
-      <button onclick="this.parentNode.remove()">x</button>
     </div>
 
     <button class="add-panel" onclick="addPanel()">+ Add Scene</button>
@@ -133,32 +144,44 @@ body{
 </div>
 
 <script>
+let activePanel=null,startY=0,startH=0;
+
+document.addEventListener("mousedown",startResize);
+document.addEventListener("mousemove",doResize);
+document.addEventListener("mouseup",stopResize);
+document.addEventListener("touchstart",startResize,{passive:false});
+document.addEventListener("touchmove",doResize,{passive:false});
+document.addEventListener("touchend",stopResize);
+
+function startResize(e){
+  const bar=e.target.closest(".resize-bar");
+  if(!bar)return;
+  activePanel=bar.parentNode;
+  startY=e.touches?e.touches[0].clientY:e.clientY;
+  startH=activePanel.offsetHeight;
+}
+
+function doResize(e){
+  if(!activePanel)return;
+  const y=e.touches?e.touches[0].clientY:e.clientY;
+  const diff=y-startY;
+  activePanel.style.height=Math.max(120,startH+diff)+"px";
+}
+
+function stopResize(){ activePanel=null; }
+
 function addPanel(){
-  const page = document.getElementById("page");
-  const addBtn = document.querySelector(".add-panel");
+  const page=document.getElementById("page");
+  const btn=document.querySelector(".add-panel");
 
-  // top line
-  const line1 = document.createElement("div");
-  line1.className = "scene-line";
-  line1.innerHTML = `<button onclick="this.parentNode.remove()">x</button>`;
-
-  // panel
-  const panel = document.createElement("div");
-  panel.className = "panel";
-  panel.contentEditable = "true";
-  panel.innerHTML = `
-    New scene...
+  const panel=document.createElement("div");
+  panel.className="panel";
+  panel.innerHTML=`
+    <div class="editor-box" contenteditable="true">New scene…</div>
+    <div class="resize-bar">⇕ resize</div>
     <button class="delete-panel" onclick="this.parentNode.remove()">x</button>
   `;
-
-  // bottom line
-  const line2 = document.createElement("div");
-  line2.className = "scene-line";
-  line2.innerHTML = `<button onclick="this.parentNode.remove()">x</button>`;
-
-  page.insertBefore(line1, addBtn);
-  page.insertBefore(panel, addBtn);
-  page.insertBefore(line2, addBtn);
+  page.insertBefore(panel,btn);
 }
 </script>
 
