@@ -1,10 +1,62 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>My First Website</title>
+  <meta charset="UTF-8" />
+  <title>Writer Visual Tool</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    body{font-family:sans-serif;margin:0;padding:0;background:#f4f4f4;}
+    header{background:#222;color:#fff;text-align:center;padding:1rem;}
+    section{background:#fff;margin:1rem;padding:1rem;border-radius:6px;}
+    h2{margin-top:0;}
+  </style>
 </head>
 <body>
-  <h1>Hello</h1>
-  <p>This is my first website.</p>
+
+  <header>
+    <h1>Writer Visual Tool</h1>
+    <p>Plan characters and scenes visually</p>
+  </header>
+
+  <!-- Character Creator -->
+  <section id="character-section">
+    <h2>Character Creator</h2>
+    <form id="character-form">
+      <label>Name:</label><br>
+      <input type="text" id="char-name" placeholder="Enter name"><br><br>
+
+      <label>Hair:</label><br>
+      <select id="char-hair">
+        <option>Short</option><option>Medium</option><option>Long</option>
+      </select><br><br>
+
+      <label>Body Type:</label><br>
+      <select id="char-body">
+        <option>Slim</option><option>Average</option><option>Curvy</option>
+      </select><br><br>
+
+      <button type="button" id="save-btn">Save Character</button>
+    </form>
+  </section>
+
+  <!-- Result Area -->
+  <section id="result-section">
+    <h2>Result</h2>
+    <p id="result-text">No character yet.</p>
+  </section>
+
+  <script>
+    // Basic logic – form काम करता है
+    const saveBtn = document.getElementById('save-btn');
+    saveBtn.addEventListener('click', () => {
+      const name = document.getElementById('char-name').value;
+      const hair = document.getElementById('char-hair').value;
+      const body = document.getElementById('char-body').value;
+
+      document.getElementById('result-text').innerText =
+        `Character Saved: ${name} | Hair: ${hair} | Body: ${body}`;
+    });
+  </script>
+
 </body>
 </html>
