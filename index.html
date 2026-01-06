@@ -46,17 +46,34 @@
   </section>
 
   <script>
-    // Basic logic – form काम करता है
-    const saveBtn = document.getElementById('save-btn');
-    saveBtn.addEventListener('click', () => {
-      const name = document.getElementById('char-name').value;
-      const hair = document.getElementById('char-hair').value;
-      const body = document.getElementById('char-body').value;
+  const saveBtn = document.getElementById('save-btn');
+  const resultText = document.getElementById('result-text');
 
-      document.getElementById('result-text').innerText =
-        `Character Saved: ${name} | Hair: ${hair} | Body: ${body}`;
-    });
+  // Load saved characters on page load
+  const savedCharacters = JSON.parse(localStorage.getItem('characters')) || [];
+  if (savedCharacters.length > 0) {
+    const last = savedCharacters[savedCharacters.length - 1];
+    resultText.innerText =
+      `Last Character: ${last.name} | Hair: ${last.hair} | Body: ${last.body}`;
+  }
+
+  saveBtn.addEventListener('click', () => {
+    const name = document.getElementById('char-name').value;
+    const hair = document.getElementById('char-hair').value;
+    const body = document.getElementById('char-body').value;
+
+    if (!name) {
+      alert('Please enter a character name');
+      return;
+    }
+
+    const character = { name, hair, body };
+
+    const characters = JSON.parse(localStorage.getItem('characters')) || [];
+    characters.push(character);
+    localStorage.setItem('characters', JSON.stringify(characters));
+
+    resultText.innerText =
+      `Character Saved: ${name} | Hair: ${hair} | Body: ${body}`;
+  });
   </script>
-
-</body>
-</html>
