@@ -4,90 +4,114 @@
 <meta charset="UTF-8">
 <title>Manhwa Editor</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <style>
 body{
   margin:0;
   font-family:"Segoe UI", Arial, sans-serif;
-  background:#e3e3e3;
+  background:#ececec;
 }
 
+/* Top Bar */
 .topbar{
   background:#111;
   color:white;
-  padding:14px;
+  padding:12px;
   text-align:center;
+  font-size:1.1rem;
   font-weight:600;
 }
 
+/* Workspace */
 .workspace{
   display:flex;
   justify-content:center;
   padding:20px;
 }
 
+/* Manhwa Strip */
 .page{
-  background:white;
   width:380px;
-  height:90vh;
-  border-radius:10px;
-  position:relative;
-  overflow:hidden;
-  box-shadow:0 10px 25px rgba(0,0,0,0.25);
-}
-
-/******** PANEL ********/
-.panel{
-  position:absolute;
-  width:160px;
-  height:180px;
-  border:2px solid #aaa;
-  border-radius:8px;
+  min-height:90vh;
   background:white;
-  padding:6px;
-  overflow:hidden;
-  cursor:move;
-  color:#555;
-  font-size:0.85rem;
+  border-radius:8px;
+  box-shadow:0 0 20px rgba(0,0,0,.3);
+  padding:12px;
+  overflow-x:hidden;
 }
 
-/*** Resize Handle (corner arrow) ***/
-.resize-handle{
-  width:16px;
-  height:16px;
+/* Panel Box */
+.panel{
+  width:100%;
+  min-height:160px;
+  border:2px dashed #777;
+  border-radius:8px;
+  background:#fafafa;
+  margin-bottom:14px;
+  position:relative;
+  resize:vertical;
+  overflow:auto;
+  padding:8px 6px 25px;
+  font-size:0.9rem;
+  color:#444;
+}
+
+/* Resize handle visual */
+.panel::after{
+  content:"↕";
+  font-size:14px;
+  color:#ff5f6d;
+  position:absolute;
+  bottom:4px;
+  right:10px;
+}
+
+/* Panel Buttons */
+.panel-controls{
+  position:absolute;
+  top:4px;
+  right:6px;
+  display:flex;
+  gap:6px;
+}
+
+.panel-btn{
   background:#ff5f6d;
-  border-radius:3px;
-  position:absolute;
-  right:0;
-  bottom:0;
-  cursor:nwse-resize;
+  color:white;
+  border:none;
+  font-size:10px;
+  padding:2px 5px;
+  border-radius:4px;
 }
 
-/*** Add Button ***/
+/* Add Panel Button */
 .add-panel{
-  position:absolute;
-  bottom:10px;
-  left:50%;
-  transform:translateX(-50%);
-  padding:10px 18px;
+  width:100%;
+  padding:10px;
   border:none;
-  border-radius:18px;
+  border-radius:20px;
   background:#ff5f6d;
   color:white;
   font-weight:600;
 }
+
 </style>
 </head>
 <body>
 
-<div class="topbar">Manhwa Editor — Drag & Resize</div>
+<div class="topbar">📜 Manhwa Editor — Vertical Panels</div>
 
 <div class="workspace">
   <div class="page" id="page">
 
     <!-- First panel -->
-    <div class="panel" style="top:20px;left:20px;" contenteditable="true">
-      Drag + Resize
-      <div class="resize-handle"></div>
+    <div class="panel" contenteditable="true">
+      Write scene here or leave blank.
+      <div class="panel-controls">
+        <button class="panel-btn" onclick="moveUp(this)">↑</button>
+        <button class="panel-btn" onclick="moveDown(this)">↓</button>
+        <button class="panel-btn" onclick="removePanel(this)">✕</button>
+      </div>
     </div>
 
     <button class="add-panel" onclick="addPanel()">+ Add Panel</button>
@@ -95,100 +119,41 @@ body{
 </div>
 
 <script>
-const page = document.getElementById("page");
-
-/******** DRAG FUNCTION (PC + MOBILE) ********/
-function makeDraggable(panel){
-  let startX, startY, startLeft, startTop, dragging = false;
-
-  function dragStart(e){
-    dragging = true;
-    const rect = panel.getBoundingClientRect();
-    startX = (e.touches ? e.touches[0].clientX : e.clientX);
-    startY = (e.touches ? e.touches[0].clientY : e.clientY);
-    startLeft = rect.left - page.getBoundingClientRect().left;
-    startTop = rect.top - page.getBoundingClientRect().top;
-    panel.style.zIndex = 10;
-  }
-
-  function draggingMove(e){
-    if(!dragging) return;
-    const x = (e.touches ? e.touches[0].clientX : e.clientX);
-    const y = (e.touches ? e.touches[0].clientY : e.clientY);
-    panel.style.left = startLeft + (x - startX) + "px";
-    panel.style.top = startTop + (y - startY) + "px";
-  }
-
-  function dragEnd(){
-    dragging = false;
-    panel.style.zIndex = 1;
-  }
-
-  panel.addEventListener("mousedown", dragStart);
-  panel.addEventListener("touchstart", dragStart);
-
-  document.addEventListener("mousemove", draggingMove);
-  document.addEventListener("touchmove", draggingMove);
-
-  document.addEventListener("mouseup", dragEnd);
-  document.addEventListener("touchend", dragEnd);
-}
-
-/******** RESIZE FUNCTION (PC + MOBILE) ********/
-function makeResizable(panel, handle){
-  let startX, startY, startW, startH, resizing=false;
-
-  function resizeStart(e){
-    e.stopPropagation();
-    resizing = true;
-    startX = (e.touches ? e.touches[0].clientX : e.clientX);
-    startY = (e.touches ? e.touches[0].clientY : e.clientY);
-    startW = panel.offsetWidth;
-    startH = panel.offsetHeight;
-  }
-
-  function resizeMove(e){
-    if(!resizing) return;
-    const x = (e.touches ? e.touches[0].clientX : e.clientX);
-    const y = (e.touches ? e.touches[0].clientY : e.clientY);
-    panel.style.width = startW + (x - startX) + "px";
-    panel.style.height = startH + (y - startY) + "px";
-  }
-
-  function resizeEnd(){ resizing=false; }
-
-  handle.addEventListener("mousedown", resizeStart);
-  handle.addEventListener("touchstart", resizeStart);
-
-  document.addEventListener("mousemove", resizeMove);
-  document.addEventListener("touchmove", resizeMove);
-
-  document.addEventListener("mouseup", resizeEnd);
-  document.addEventListener("touchend", resizeEnd);
-}
-
-/******** ADD PANEL ********/
 function addPanel(){
-  const panel = document.createElement("div");
-  panel.className="panel";
-  panel.style.left="40px";
-  panel.style.top="40px";
-  panel.contentEditable="true";
-  panel.textContent="Panel";
-  
-  const handle = document.createElement("div");
-  handle.className="resize-handle";
-  panel.appendChild(handle);
-
-  page.appendChild(panel);
-  makeDraggable(panel);
-  makeResizable(panel, handle);
+  const div=document.createElement("div");
+  div.className="panel";
+  div.contentEditable="true";
+  div.innerHTML = `
+    Write scene here or leave blank.
+    <div class="panel-controls">
+      <button class="panel-btn" onclick="moveUp(this)">↑</button>
+      <button class="panel-btn" onclick="moveDown(this)">↓</button>
+      <button class="panel-btn" onclick="removePanel(this)">✕</button>
+    </div>
+  `;
+  document.getElementById("page")
+    .insertBefore(div, document.querySelector(".add-panel"));
 }
 
-/*** Initialize first panel ***/
-const first = document.querySelector(".panel");
-makeDraggable(first);
-makeResizable(first, first.querySelector(".resize-handle"));
+function removePanel(btn){
+  btn.parentNode.parentNode.remove();
+}
+
+function moveUp(btn){
+  let panel=btn.parentNode.parentNode;
+  let prev=panel.previousElementSibling;
+  if(prev && prev.classList.contains("panel")){
+    panel.parentNode.insertBefore(panel, prev);
+  }
+}
+
+function moveDown(btn){
+  let panel=btn.parentNode.parentNode;
+  let next=panel.nextElementSibling;
+  if(next && next.classList.contains("panel")){
+    panel.parentNode.insertBefore(next, panel);
+  }
+}
 </script>
 
 </body>
