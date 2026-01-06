@@ -9,94 +9,125 @@
     header{background:#222;color:#fff;text-align:center;padding:1rem;}
     section{background:#fff;margin:1rem;padding:1rem;border-radius:6px;}
     h2{margin-top:0;}
+    ul{padding-left:20px;}
+    li{cursor:pointer;margin-bottom:6px;}
+    li:hover{background:#f0f0f0;}
+    .details{background:#eef;border-radius:6px;padding:1rem;margin-top:1rem;}
   </style>
 </head>
 <body>
 
-  <header>
-    <h1>Writer Visual Tool</h1>
-    <p>Plan characters and scenes visually</p>
-  </header>
+<header>
+  <h1>Writer Visual Tool</h1>
+  <p>Plan characters and scenes visually</p>
+</header>
 
-  <!-- Character Creator -->
-  <section id="character-section">
-    <h2>Character Creator</h2>
-    <form id="character-form">
-      <label>Name:</label><br>
-      <input type="text" id="char-name" placeholder="Enter name"><br><br>
+<!-- Character Creator -->
+<section>
+  <h2>Character Creator</h2>
 
-      <label>Hair:</label><br>
-      <select id="char-hair">
-        <option>Short</option><option>Medium</option><option>Long</option>
-      </select><br><br>
+  <label>Name:</label><br>
+  <input type="text" id="char-name" placeholder="Enter name"><br><br>
 
-      <label>Body Type:</label><br>
-      <select id="char-body">
-        <option>Slim</option><option>Average</option><option>Curvy</option>
-      </select><br><br>
+  <label>Hair:</label><br>
+  <select id="char-hair">
+    <option>Short</option>
+    <option>Medium</option>
+    <option>Long</option>
+  </select><br><br>
 
-      <button type="button" id="save-btn">Save Character</button>
-    </form>
-  </section>
+  <label>Body Type:</label><br>
+  <select id="char-body">
+    <option>Slim</option>
+    <option>Average</option>
+    <option>Curvy</option>
+  </select><br><br>
 
-  <!-- Result Area -->
-  <section id="result-section">
-    <h2>Result</h2>
-    <p id="result-text">No character yet.</p>
+  <button id="save-btn">Save Character</button>
+</section>
+
+<!-- Result -->
+<section>
+  <h2>Characters</h2>
+  <p id="result-text">No character yet.</p>
   <ul id="character-list"></ul>
-  </section>
 
-  <script>
-  const saveBtn = document.getElementById('save-btn');
-  const resultText = document.getElementById('result-text');
+  <!-- Details Panel -->
+  <div id="details" class="details" style="display:none;">
+    <h3>Character Details</h3>
+    <p id="detail-text"></p>
+  </div>
+</section>
 
-  // Load saved characters on page load
-  const savedCharacters = JSON.parse(localStorage.getItem('characters')) || [];
-  if (savedCharacters.length > 0) {
-    const last = savedCharacters[savedCharacters.length - 1];
-    resultText.innerText =
-      `Last Character: ${last.name} | Hair: ${last.hair} | Body: ${last.body}`;
+<script>
+const saveBtn = document.getElementById('save-btn');
+const list = document.getElementById('character-list');
+const resultText = document.getElementById('result-text');
+const detailsBox = document.getElementById('details');
+const detailText = document.getElementById('detail-text');
+
+function getCharacters() {
+  return JSON.parse(localStorage.getItem('characters')) || [];
+}
+
+function saveCharacters(chars) {
+  localStorage.setItem('characters', JSON.stringify(chars));
+}
+
+function renderCharacters() {
+  list.innerHTML = '';
+  const characters = getCharacters();
+
+  characters.forEach((char, index) => {
+    const li = document.createElement('li');
+    li.textContent = `${index + 1}. ${char.name}`;
+    li.onclick = () => showDetails(char);
+    list.appendChild(li);
+  });
+
+  if (characters.length > 0) {
+    const last = characters[characters.length - 1];
+    resultText.innerText = `Last Character: ${last.name}`;
+  }
+}
+
+function showDetails(char) {
+  detailsBox.style.display = 'block';
+  detailText.innerHTML = `
+    <strong>Name:</strong> ${char.name}<br>
+    <strong>Hair:</strong> ${char.hair}<br>
+    <strong>Body:</strong> ${char.body}
+  `;
+}
+
+saveBtn.onclick = () => {
+  const name = document.getElementById('char-name').value.trim();
+  const hair = document.getElementById('char-hair').value;
+  const body = document.getElementById('char-body').value;
+
+  if (!name) {
+    alert('Enter name');
+    return;
   }
 
-  saveBtn.addEventListener('click', () => {
-    const name = document.getElementById('char-name').value;
-    const hair = document.getElementById('char-hair').value;
-    const body = document.getElementById('char-body').value;
+  const characters = getCharacters();
+  if (characters.some(c => c.name.toLowerCase() === name.toLowerCase())) {
+    alert('Character already exists');
+    return;
+  }
 
-    if (!name) {
-      alert('Please enter a character name');
-      return;
-    }
+  characters.push({ name, hair, body });
+  saveCharacters(characters);
 
-    const character = { name, hair, body };
+  document.getElementById('char-name').value = '';
+  document.getElementById('char-hair').selectedIndex = 0;
+  document.getElementById('char-body').selectedIndex = 0;
 
-    const characters = JSON.parse(localStorage.getItem('characters')) || [];
-    characters.push(character);
-    localStorage.setItem('characters', JSON.stringify(characters));
-
-    resultText.innerText =
-  `Character Saved: ${name} | Hair: ${hair} | Body: ${body}`;
+  renderCharacters();
+};
 
 renderCharacters();
-
-document.getElementById('char-name').value = '';
-document.getElementById('char-hair').selectedIndex = 0;
-document.getElementById('char-body').selectedIndex = 0;
-});
-  const list = document.getElementById('character-list');
-
-  function renderCharacters() {
-    list.innerHTML = '';
-    const characters = JSON.parse(localStorage.getItem('characters')) || [];
-
-    characters.forEach((char, index) => {
-      const li = document.createElement('li');
-      li.textContent = `${index + 1}. ${char.name} | ${char.hair} | ${char.body}`;
-      list.appendChild(li);
-    });
-  }
-
-  // Call after save
-  // Call on page load
-  renderCharacters();
 </script>
+
+</body>
+</html>
