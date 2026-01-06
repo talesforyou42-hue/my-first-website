@@ -32,32 +32,27 @@ body{
 .page{
   background:white;
   width:380px;
-  min-height:90vh;
+  height:90vh;
   border-radius:10px;
   box-shadow:0 10px 30px rgba(0,0,0,0.2);
-  padding:12px;
   position:relative;
+  overflow:hidden;
 }
 
-/* PANEL AREA */
-.panel-area{
-  display:flex;
-  flex-wrap:wrap;
-  gap:12px;
-}
-
-/* EDITABLE PANEL */
+/* PANEL */
 .panel{
-  width:100%;
-  min-height:160px;
-  border:2px dashed #bbb;
+  position:absolute;
+  width:160px;
+  height:180px;
+  border:2px dashed #aaa;
   border-radius:8px;
+  background:#fafafa;
+  padding:6px;
   resize:both;
   overflow:auto;
-  padding:8px;
-  font-size:0.9rem;
-  color:#666;
-  background:#fafafa;
+  cursor:move;
+  font-size:0.85rem;
+  color:#555;
 }
 
 .panel:focus{
@@ -65,44 +60,16 @@ body{
   border-color:#ff5f6d;
 }
 
-/* ADD PANEL BUTTON */
+/* ADD BUTTON */
 .add-panel{
-  margin-top:14px;
-  width:100%;
-  padding:10px;
+  position:absolute;
+  bottom:10px;
+  left:50%;
+  transform:translateX(-50%);
+  padding:10px 20px;
   border:none;
   border-radius:20px;
   background:#ff5f6d;
-  color:white;
-  font-weight:600;
-}
-
-/* INPUT BAR */
-.input-bar{
-  position:fixed;
-  bottom:0;
-  left:0;
-  width:100%;
-  background:#fff;
-  border-top:1px solid #ccc;
-  padding:10px;
-  display:flex;
-  gap:8px;
-}
-
-.input-bar input{
-  flex:1;
-  padding:10px;
-  border-radius:20px;
-  border:1px solid #ccc;
-  outline:none;
-}
-
-.input-bar button{
-  padding:10px 16px;
-  border:none;
-  border-radius:20px;
-  background:#111;
   color:white;
   font-weight:600;
 }
@@ -116,32 +83,55 @@ body{
 </div>
 
 <div class="workspace">
-  <div class="page">
+  <div class="page" id="page">
 
-    <div class="panel-area" id="panelArea">
-      <div class="panel" contenteditable="true">
-        Click here and describe the scene or leave empty
-      </div>
+    <div class="panel" contenteditable="true" style="top:20px;left:20px;">
+      Drag me • Resize me • Write scene
     </div>
 
     <button class="add-panel" onclick="addPanel()">+ Add Panel</button>
-
   </div>
 </div>
 
-<div class="input-bar">
-  <input type="text" placeholder="Describe scene for selected panel…">
-  <button>Create</button>
-</div>
-
 <script>
+const page = document.getElementById("page");
+
+function makeDraggable(panel){
+  let offsetX, offsetY, isDown = false;
+
+  panel.addEventListener("mousedown", e => {
+    isDown = true;
+    offsetX = e.offsetX;
+    offsetY = e.offsetY;
+    panel.style.zIndex = 10;
+  });
+
+  document.addEventListener("mouseup", () => {
+    isDown = false;
+    panel.style.zIndex = 1;
+  });
+
+  document.addEventListener("mousemove", e => {
+    if(!isDown) return;
+    const rect = page.getBoundingClientRect();
+    panel.style.left = (e.clientX - rect.left - offsetX) + "px";
+    panel.style.top  = (e.clientY - rect.top - offsetY) + "px";
+  });
+}
+
 function addPanel(){
   const panel = document.createElement("div");
   panel.className = "panel";
   panel.contentEditable = "true";
-  panel.textContent = "New manhwa panel";
-  document.getElementById("panelArea").appendChild(panel);
+  panel.textContent = "New panel";
+  panel.style.top = "40px";
+  panel.style.left = "40px";
+  page.appendChild(panel);
+  makeDraggable(panel);
 }
+
+// make first panel draggable
+makeDraggable(document.querySelector(".panel"));
 </script>
 
 </body>
