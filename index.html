@@ -6,63 +6,79 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
+*{box-sizing:border-box}
+
 body{
   margin:0;
-  height:100vh;
+  min-height:100vh;
   display:flex;
   justify-content:center;
   align-items:center;
-  font-family:"Segoe UI", Arial, sans-serif;
-  background: linear-gradient(135deg,#ffd3b6,#ffaaa5);
+  font-family:'Segoe UI', Arial, sans-serif;
+  background:
+    radial-gradient(circle at 10% 20%, #ff9a9e, transparent 40%),
+    radial-gradient(circle at 90% 30%, #fad0c4, transparent 40%),
+    radial-gradient(circle at 50% 80%, #fbc2eb, transparent 45%),
+    linear-gradient(135deg,#a18cd1,#fbc2eb);
 }
 
-/* CENTER WRAPPER */
-.container{
+/* FLOATING CARD */
+.hero{
+  background:rgba(255,255,255,0.92);
+  padding:48px 36px;
+  border-radius:28px;
   text-align:center;
+  max-width:420px;
+  width:90%;
+  box-shadow:0 30px 60px rgba(0,0,0,.25);
+  animation:float 6s ease-in-out infinite;
 }
 
-/* TITLE */
-h1{
+@keyframes float{
+  0%{transform:translateY(0)}
+  50%{transform:translateY(-10px)}
+  100%{transform:translateY(0)}
+}
+
+.hero h1{
   margin:0;
-  font-size:2.8rem;
-  font-weight:800;
-  background:linear-gradient(90deg,#ff7a18,#ffb347,#ff7a18);
+  font-size:2.4rem;
+  background:linear-gradient(90deg,#ff6f61,#ffb347,#6a11cb);
   -webkit-background-clip:text;
   -webkit-text-fill-color:transparent;
 }
 
-/* SUBTITLE */
-p{
-  margin:12px 0 40px;
+.hero p{
+  margin:14px 0 28px;
+  color:#444;
   font-size:1.05rem;
-  color:#333;
 }
 
-/* LINK */
-a{
-  font-size:2.2rem;
-  font-weight:700;
+.hero a{
+  display:inline-block;
+  padding:16px 34px;
+  border-radius:40px;
   text-decoration:none;
-  background:linear-gradient(90deg,#ff512f,#dd2476,#ff512f);
-  -webkit-background-clip:text;
-  -webkit-text-fill-color:transparent;
-  transition:transform .2s ease;
+  font-weight:700;
+  font-size:1.05rem;
+  color:white;
+  background:linear-gradient(90deg,#ff512f,#dd2476,#ffb347);
+  box-shadow:0 12px 25px rgba(221,36,118,0.45);
+  transition:.3s;
 }
 
-a:hover{
-  transform:scale(1.06);
+.hero a:hover{
+  transform:scale(1.05);
 }
 </style>
 </head>
 
 <body>
 
-<div class="container">
+<div class="hero">
   <h1>Writer Visual Tool</h1>
   <p>Create characters & scenes without leaving the site</p>
-
-  <!-- ONLY LINK -->
-  <a href="editor.html">Start your Manhwa here</a>
+  <a href="editor.html">Start your Manhwa here →</a>
 </div>
 
 </body>
