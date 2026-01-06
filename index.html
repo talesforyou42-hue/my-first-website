@@ -78,6 +78,10 @@
   `Character Saved: ${name} | Hair: ${hair} | Body: ${body}`;
 
 renderCharacters();
+
+document.getElementById('char-name').value = '';
+document.getElementById('char-hair').selectedIndex = 0;
+document.getElementById('char-body').selectedIndex = 0;
 });
   const list = document.getElementById('character-list');
 
