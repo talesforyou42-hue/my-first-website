@@ -2,213 +2,111 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Writer Visual Tool</title>
+<title>Manhwa Creator</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
-/* ===== GLOBAL ===== */
+/* ===== RESET ===== */
+*{box-sizing:border-box}
+
+/* ===== BODY ===== */
 body{
   margin:0;
-  font-family:Arial, sans-serif;
-  background:linear-gradient(135deg,#fdfbfb,#ebedee);
-  color:#333;
+  font-family:'Segoe UI', Arial, sans-serif;
+  min-height:100vh;
+  background:
+    radial-gradient(circle at 10% 20%, #ff9a9e, transparent 40%),
+    radial-gradient(circle at 90% 30%, #fad0c4, transparent 40%),
+    radial-gradient(circle at 50% 80%, #fbc2eb, transparent 45%),
+    linear-gradient(135deg,#a18cd1,#fbc2eb);
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  overflow:hidden;
 }
 
-header{
+/* ===== CARD ===== */
+.hero{
+  background:rgba(255,255,255,0.92);
+  padding:48px 36px;
+  border-radius:28px;
   text-align:center;
-  padding:2rem 1rem;
-  background:linear-gradient(90deg,#ffecd2,#fcb69f);
+  max-width:420px;
+  width:90%;
+  box-shadow:
+    0 30px 60px rgba(0,0,0,0.25),
+    inset 0 0 0 1px rgba(255,255,255,0.6);
+  animation:float 6s ease-in-out infinite;
 }
 
-section{
-  background:#ffffff;
-  margin:1.5rem auto;
-  padding:1.5rem;
-  max-width:900px;
-  border-radius:16px;
-  box-shadow:0 8px 25px rgba(0,0,0,.12);
+@keyframes float{
+  0%{transform:translateY(0)}
+  50%{transform:translateY(-10px)}
+  100%{transform:translateY(0)}
 }
 
-h2{
-  margin-top:0;
-  color:#ff7a5a;
+/* ===== TEXT ===== */
+.hero h1{
+  margin:0;
+  font-size:2.4rem;
+  background:linear-gradient(90deg,#ff6f61,#ffb347,#6a11cb);
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
 }
 
-label{font-weight:bold}
-
-input, textarea, select{
-  width:100%;
-  padding:10px;
-  margin-top:6px;
-  margin-bottom:14px;
-  border-radius:10px;
-  border:1px solid #ccc;
+.hero p{
+  margin:14px 0 28px;
+  color:#444;
+  font-size:1.05rem;
+  line-height:1.4;
 }
 
-button{
-  padding:12px 22px;
-  border:none;
-  border-radius:30px;
-  background:linear-gradient(90deg,#ff7a5a,#ffb347);
-  color:#fff;
-  font-weight:bold;
-  cursor:pointer;
+/* ===== BUTTON ===== */
+.hero a{
+  display:inline-block;
+  padding:16px 34px;
+  border-radius:40px;
+  text-decoration:none;
+  font-weight:700;
+  font-size:1.05rem;
+  color:white;
+  background:linear-gradient(90deg,#ff512f,#dd2476,#ffb347);
+  background-size:200% 200%;
+  box-shadow:0 12px 25px rgba(221,36,118,0.45);
+  transition:all .3s ease;
 }
-button:hover{opacity:.9}
 
-ul{padding-left:20px}
-li{margin:6px 0;cursor:pointer}
-li:hover{color:#ff7a5a}
+.hero a:hover{
+  background-position:100% 0;
+  transform:scale(1.05);
+  box-shadow:0 18px 35px rgba(221,36,118,0.55);
+}
 
-.prompt-box{
-  background:#f7f7f7;
-  padding:14px;
-  border-radius:12px;
-  white-space:pre-wrap;
+/* ===== SMALL NOTE ===== */
+.note{
+  margin-top:22px;
+  font-size:0.85rem;
+  color:#666;
 }
 </style>
 </head>
 
 <body>
 
-<header>
-<h1>Writer Visual Tool</h1>
-<p>Create characters & scenes without leaving the site</p>
-</header>
+  <div class="hero">
+    <h1>Manhwa Creator</h1>
+    <p>
+      Create your own manhwa from a blank page.<br>
+      Design panels, write scenes, and build stories visually.
+    </p>
 
-<!-- CHARACTER CREATOR -->
-<section>
-<h2>Character Creator</h2>
+    <!-- ONLY LINK -->
+    <a href="editor.html">Start your Manhwa here →</a>
 
-<label>Character Name</label>
-<input id="char-name" placeholder="Asha">
-
-<label>Face Signature (locks face)</label>
-<textarea id="face-sign"
-placeholder="Oval face, sharp eyes, small lips, calm confident look"></textarea>
-
-<label>Character Style & Body</label>
-<textarea id="char-desc"
-placeholder="Manhwa style adult woman, long hair, elegant posture"></textarea>
-
-<button id="save-character">Save Character</button>
-</section>
-
-<!-- SCENE BUILDER -->
-<section>
-<h2>Scene Builder</h2>
-
-<label>Expression</label>
-<select id="expression">
-<option>Neutral</option>
-<option>Smile</option>
-<option>Seductive</option>
-<option>Angry</option>
-<option>Shy</option>
-</select>
-
-<label>Intensity</label>
-<select id="intensity">
-<option>Low</option>
-<option>Medium</option>
-<option>High</option>
-</select>
-
-<label>Location</label>
-<input id="location" placeholder="Bedroom">
-
-<label>Time</label>
-<select id="time">
-<option>Day</option>
-<option>Night</option>
-</select>
-
-<label>Mood</label>
-<input id="mood" placeholder="Quiet, intimate, tense">
-
-<button id="generate">Generate Prompt</button>
-</section>
-
-<!-- OUTPUT -->
-<section>
-<h2>Final Image Prompt</h2>
-<div id="final-prompt" class="prompt-box">No prompt yet.</div>
-</section>
-
-<!-- LIST -->
-<section>
-<h2>Saved Characters</h2>
-<ul id="list"></ul>
-</section>
-
-<script>
-/* ===== STORAGE ===== */
-const getChars=()=>JSON.parse(localStorage.getItem("chars"))||[];
-const saveChars=c=>localStorage.setItem("chars",JSON.stringify(c));
-
-/* ===== SAVE CHARACTER ===== */
-document.getElementById("save-character").onclick=()=>{
-  const name=document.getElementById("char-name").value.trim();
-  const face=document.getElementById("face-sign").value.trim();
-  const desc=document.getElementById("char-desc").value.trim();
-
-  if(!name||!face||!desc){
-    alert("Fill all fields");
-    return;
-  }
-
-  const chars=getChars();
-  if(chars.some(c=>c.name.toLowerCase()===name.toLowerCase())){
-    alert("Character name already exists");
-    return;
-  }
-
-  chars.push({name,face,desc});
-  saveChars(chars);
-
-  document.getElementById("char-name").value="";
-  document.getElementById("face-sign").value="";
-  document.getElementById("char-desc").value="";
-
-  render();
-};
-
-/* ===== RENDER LIST ===== */
-let active=null;
-const list=document.getElementById("list");
-
-function render(){
-  list.innerHTML="";
-  getChars().forEach(c=>{
-    const li=document.createElement("li");
-    li.textContent=c.name;
-    li.onclick=()=>active=c;
-    list.appendChild(li);
-  });
-}
-render();
-
-/* ===== PROMPT ENGINE ===== */
-document.getElementById("generate").onclick=()=>{
-  if(!active){
-    alert("Select a character first");
-    return;
-  }
-
-  const prompt=`
-Manhwa style illustration,
-same character face: ${active.face},
-character body & style: ${active.desc},
-expression: ${expression.value} (${intensity.value}),
-location: ${location.value},
-time: ${time.value},
-mood: ${mood.value},
-high quality, clean lines, consistent face
-`.trim();
-
-  document.getElementById("final-prompt").textContent=prompt;
-};
-</script>
+    <div class="note">
+      No setup • Beginner friendly • Visual workflow
+    </div>
+  </div>
 
 </body>
 </html>
