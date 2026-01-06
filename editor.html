@@ -8,7 +8,7 @@
 <style>
 *{box-sizing:border-box}
 
-/* OLD COLOURFUL BACKGROUND */
+/* COLOURFUL BACKGROUND */
 body{
   margin:0;
   font-family:"Segoe UI", Arial, sans-serif;
@@ -18,9 +18,10 @@ body{
     radial-gradient(circle at 90% 30%, #fad0c4, transparent 40%),
     radial-gradient(circle at 50% 80%, #fbc2eb, transparent 45%),
     linear-gradient(135deg,#a18cd1,#fbc2eb);
+  overflow-x:hidden;
 }
 
-/* Floating Card Look */
+/* Wrapper */
 .page-wrapper{
   display:flex;
   justify-content:center;
@@ -28,21 +29,14 @@ body{
   width:100%;
 }
 
+/* PAGE CARD */
 .page{
   background:white;
   width:380px;
   min-height:90vh;
   border-radius:18px;
   padding:14px;
-  box-shadow:
-    0 30px 60px rgba(0,0,0,0.25),
-    inset 0 0 0 1px rgba(255,255,255,0.6);
-  animation:float 6s ease-in-out infinite;
-}
-@keyframes float{
-  0%{transform:translateY(0)}
-  50%{transform:translateY(-10px)}
-  100%{transform:translateY(0)}
+  box-shadow:0 30px 60px rgba(0,0,0,0.25);
 }
 
 /* Top Bar */
@@ -54,7 +48,7 @@ body{
   font-size:1.4rem;
 }
 
-/* Panel */
+/* PANEL */
 .panel{
   width:100%;
   min-height:160px;
@@ -69,7 +63,7 @@ body{
   padding-bottom:26px;
 }
 
-/* Editable writing area */
+/* Text area */
 .editor-box{
   width:100%;
   height:100%;
@@ -77,7 +71,7 @@ body{
   outline:none;
 }
 
-/* Resize handle */
+/* RESIZE BAR */
 .resize-bar{
   position:absolute;
   bottom:0;
@@ -93,11 +87,11 @@ body{
   border-top:1px solid #aaa;
 }
 
-/* Delete panel button */
+/* Delete */
 .delete-panel{
   position:absolute;
-  right:8px;
-  top:8px;
+  right:6px;
+  top:6px;
   background:red;
   color:white;
   border:none;
@@ -106,7 +100,7 @@ body{
   border-radius:4px;
 }
 
-/* Add button */
+/* Add */
 .add-panel{
   width:100%;
   padding:12px;
@@ -117,10 +111,6 @@ body{
   font-weight:700;
   font-size:1rem;
   margin-top:8px;
-  box-shadow:0 4px 12px rgba(0,0,0,0.2);
-}
-.add-panel:active{
-  transform:scale(.97);
 }
 </style>
 </head>
@@ -132,7 +122,6 @@ body{
 <div class="page-wrapper">
   <div class="page" id="page">
 
-    <!-- FIRST PANEL -->
     <div class="panel">
       <div class="editor-box" contenteditable="true">Start your scene…</div>
       <div class="resize-bar">⇕ resize</div>
@@ -144,6 +133,7 @@ body{
 </div>
 
 <script>
+let resizing = false;
 let activePanel=null,startY=0,startH=0;
 
 document.addEventListener("mousedown",startResize);
@@ -156,19 +146,29 @@ document.addEventListener("touchend",stopResize);
 function startResize(e){
   const bar=e.target.closest(".resize-bar");
   if(!bar)return;
+  resizing = true;
   activePanel=bar.parentNode;
   startY=e.touches?e.touches[0].clientY:e.clientY;
   startH=activePanel.offsetHeight;
+
+  // LOCK SCROLL
+  document.body.style.overflow="hidden";
 }
 
 function doResize(e){
-  if(!activePanel)return;
+  if(!resizing)return;
+
   const y=e.touches?e.touches[0].clientY:e.clientY;
   const diff=y-startY;
   activePanel.style.height=Math.max(120,startH+diff)+"px";
 }
 
-function stopResize(){ activePanel=null; }
+function stopResize(){
+  resizing = false;
+  activePanel=null;
+  // UNLOCK SCROLL
+  document.body.style.overflow="auto";
+}
 
 function addPanel(){
   const page=document.getElementById("page");
