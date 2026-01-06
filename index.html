@@ -11,7 +11,9 @@
     h2{margin-top:0;}
     textarea{width:100%;height:90px;}
     ul{padding-left:20px;}
-    button{padding:8px 12px;}
+    button{padding:8px 12px;margin-top:8px;}
+    img{max-width:150px;border-radius:8px;margin-top:8px;}
+    .locked{color:green;font-weight:bold;}
   </style>
 </head>
 <body>
@@ -32,6 +34,15 @@
   <textarea id="char-prompt"
     placeholder="Example: Manhwa style mature woman, long hair, confident, seductive vibe"></textarea><br><br>
 
+  <!-- FACE LOCK UI -->
+  <h3>Face Lock (Required)</h3>
+  <input type="file" id="face-upload" accept="image/*"><br>
+  <img id="face-preview" style="display:none;">
+  <p id="face-status">No face locked</p>
+  <button id="lock-face-btn">Lock Face</button>
+
+  <hr>
+
   <button id="save-btn">Save Character</button>
 </section>
 
@@ -47,6 +58,41 @@ const saveBtn = document.getElementById('save-btn');
 const resultText = document.getElementById('result-text');
 const list = document.getElementById('character-list');
 
+const faceUpload = document.getElementById('face-upload');
+const facePreview = document.getElementById('face-preview');
+const faceStatus = document.getElementById('face-status');
+const lockFaceBtn = document.getElementById('lock-face-btn');
+
+let faceLocked = false;
+let faceImageData = null;
+
+/* ---------- FACE LOCK LOGIC ---------- */
+faceUpload.addEventListener('change', () => {
+  const file = faceUpload.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = () => {
+    facePreview.src = reader.result;
+    facePreview.style.display = 'block';
+    faceImageData = reader.result;
+  };
+  reader.readAsDataURL(file);
+});
+
+lockFaceBtn.addEventListener('click', () => {
+  if (!faceImageData) {
+    alert('Please upload a face image first');
+    return;
+  }
+  faceLocked = true;
+  faceUpload.disabled = true;
+  lockFaceBtn.disabled = true;
+  faceStatus.textContent = 'Face Locked ✅';
+  faceStatus.className = 'locked';
+});
+
+/* ---------- STORAGE HELPERS ---------- */
 function getCharacters() {
   return JSON.parse(localStorage.getItem('characters')) || [];
 }
@@ -55,6 +101,7 @@ function saveCharacters(data) {
   localStorage.setItem('characters', JSON.stringify(data));
 }
 
+/* ---------- RENDER LIST ---------- */
 function renderCharacters() {
   list.innerHTML = '';
   const characters = getCharacters();
@@ -72,6 +119,7 @@ function renderCharacters() {
   }
 }
 
+/* ---------- SAVE CHARACTER ---------- */
 saveBtn.addEventListener('click', () => {
   const name = document.getElementById('char-name').value.trim();
   const prompt = document.getElementById('char-prompt').value.trim();
@@ -81,17 +129,28 @@ saveBtn.addEventListener('click', () => {
     return;
   }
 
+  if (!faceLocked) {
+    alert('You must lock a face before saving character');
+    return;
+  }
+
   const characters = getCharacters();
 
-  // duplicate name check
   if (characters.some(c => c.name.toLowerCase() === name.toLowerCase())) {
     alert('Character with this name already exists');
     return;
   }
 
-  characters.push({ name, prompt });
+  characters.push({
+    name,
+    prompt,
+    face: faceImageData,   // FACE IDENTITY
+    locked: true
+  });
+
   saveCharacters(characters);
 
+  // Reset form (not face lock)
   document.getElementById('char-name').value = '';
   document.getElementById('char-prompt').value = '';
 
