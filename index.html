@@ -6,16 +6,102 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
-body{font-family:sans-serif;background:#f4f4f4;margin:0}
-header{background:#222;color:#fff;text-align:center;padding:1rem}
-section{background:#fff;margin:1rem;padding:1rem;border-radius:6px}
-h2,h3{margin-top:0}
-textarea,input,select{width:100%;margin-top:6px;padding:6px}
-button{padding:8px 12px;margin-top:10px}
-img{max-width:150px;border-radius:8px;margin-top:8px}
-.locked{color:green;font-weight:bold}
+/* ---------- GLOBAL ---------- */
+body{
+  font-family: 'Segoe UI', sans-serif;
+  margin:0;
+  background:linear-gradient(135deg,#1e1e1e,#3a3a3a);
+  color:#eee;
+}
+
+/* ---------- HEADER ---------- */
+header{
+  text-align:center;
+  padding:2rem 1rem;
+  background:linear-gradient(90deg,#ff4d6d,#845ec2);
+}
+header h1{
+  margin:0;
+  font-size:2.2rem;
+}
+header p{
+  opacity:.9;
+}
+
+/* ---------- SECTIONS ---------- */
+section{
+  background:#1f1f1f;
+  margin:1.5rem auto;
+  padding:1.5rem;
+  border-radius:14px;
+  max-width:900px;
+  box-shadow:0 10px 30px rgba(0,0,0,.4);
+}
+
+h2,h3{
+  color:#ffd369;
+  margin-top:0;
+}
+
+/* ---------- FORM ---------- */
+textarea,input,select{
+  width:100%;
+  margin-top:6px;
+  padding:10px;
+  border-radius:8px;
+  border:none;
+  background:#2b2b2b;
+  color:#fff;
+}
+
+textarea::placeholder,input::placeholder{
+  color:#aaa;
+}
+
+button{
+  padding:10px 16px;
+  border:none;
+  border-radius:20px;
+  background:linear-gradient(90deg,#ff4d6d,#ffb703);
+  color:#000;
+  font-weight:600;
+  cursor:pointer;
+}
+button:hover{opacity:.9}
+
+/* ---------- FACE ---------- */
+img{
+  max-width:150px;
+  border-radius:10px;
+  margin-top:10px;
+}
+.locked{color:#4dff88;font-weight:bold}
+
+/* ---------- LIST ---------- */
 ul{padding-left:20px}
-.prompt-box{background:#eee;padding:10px;border-radius:6px;white-space:pre-wrap}
+li{cursor:pointer;margin:6px 0}
+li:hover{color:#ffd369}
+
+/* ---------- PROMPT ---------- */
+.prompt-box{
+  background:#111;
+  padding:14px;
+  border-radius:10px;
+  white-space:pre-wrap;
+  border:1px dashed #444;
+}
+
+/* ---------- IMAGE PREVIEW ---------- */
+#generated-image{
+  max-width:100%;
+  display:none;
+  margin-top:15px;
+  border-radius:14px;
+}
+#loading{
+  color:#aaa;
+  font-style:italic;
+}
 </style>
 </head>
 
@@ -33,8 +119,9 @@ ul{padding-left:20px}
 <label>Character Name</label>
 <input id="char-name" placeholder="Asha">
 
-<label>Character Description (simple words)</label>
-<textarea id="char-desc" placeholder="Manhwa style adult woman, calm, confident"></textarea>
+<label>Character Description</label>
+<textarea id="char-desc"
+placeholder="Manhwa style adult woman, calm, confident"></textarea>
 
 <h3>Face Lock (Required)</h3>
 <input type="file" id="face-upload" accept="image/*">
@@ -47,7 +134,7 @@ ul{padding-left:20px}
 <button id="save-character">Save Character</button>
 </section>
 
-<!-- SCENE & EXPRESSION -->
+<!-- SCENE BUILDER -->
 <section>
 <h2>Scene Builder</h2>
 
@@ -82,12 +169,15 @@ ul{padding-left:20px}
 <label>Background Mood</label>
 <input id="mood" placeholder="Quiet, tense, intimate">
 
-<button id="generate-prompt">Generate Image Prompt</button>
+<button id="generate-image">Generate Image</button>
+
+<p id="loading"></p>
+<img id="generated-image">
 </section>
 
 <!-- OUTPUT -->
 <section>
-<h2>Final Image Prompt (Ready for AI)</h2>
+<h2>Final Image Prompt</h2>
 <div id="final-prompt" class="prompt-box">No prompt yet.</div>
 </section>
 
@@ -98,121 +188,81 @@ ul{padding-left:20px}
 </section>
 
 <script>
-/* ---------------- FACE LOCK ---------------- */
-const faceUpload = document.getElementById('face-upload');
-const facePreview = document.getElementById('face-preview');
-const faceStatus = document.getElementById('face-status');
-const lockFaceBtn = document.getElementById('lock-face');
+/* ---------- FACE LOCK ---------- */
+const faceUpload=document.getElementById('face-upload');
+const facePreview=document.getElementById('face-preview');
+const faceStatus=document.getElementById('face-status');
+let faceLocked=false,faceData=null;
 
-let faceLocked = false;
-let faceData = null;
-
-faceUpload.onchange = () => {
-  const file = faceUpload.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = () => {
-    facePreview.src = reader.result;
-    facePreview.style.display = 'block';
-    faceData = reader.result;
+faceUpload.onchange=()=>{
+  const f=faceUpload.files[0];
+  if(!f)return;
+  const r=new FileReader();
+  r.onload=()=>{
+    facePreview.src=r.result;
+    facePreview.style.display='block';
+    faceData=r.result;
   };
-  reader.readAsDataURL(file);
+  r.readAsDataURL(f);
 };
 
-lockFaceBtn.onclick = () => {
-  if (!faceData) {
-    alert("Upload a face image first");
-    return;
-  }
-  faceLocked = true;
-  faceUpload.disabled = true;
-  lockFaceBtn.disabled = true;
-  faceStatus.textContent = "Face Locked ✅";
-  faceStatus.className = "locked";
+document.getElementById('lock-face').onclick=()=>{
+  if(!faceData){alert("Upload face first");return;}
+  faceLocked=true;
+  faceUpload.disabled=true;
+  faceStatus.textContent="Face Locked ✅";
+  faceStatus.className="locked";
 };
 
-/* ---------------- STORAGE ---------------- */
-function getCharacters(){
-  return JSON.parse(localStorage.getItem("characters")) || [];
-}
-function saveCharacters(c){
-  localStorage.setItem("characters", JSON.stringify(c));
-}
+/* ---------- STORAGE ---------- */
+const getChars=()=>JSON.parse(localStorage.getItem("characters"))||[];
+const saveChars=c=>localStorage.setItem("characters",JSON.stringify(c));
 
-/* ---------------- SAVE CHARACTER ---------------- */
-document.getElementById('save-character').onclick = () => {
-  const name = document.getElementById('char-name').value.trim();
-  const desc = document.getElementById('char-desc').value.trim();
-
-  if (!name || !desc) {
-    alert("Enter name and description");
-    return;
-  }
-  if (!faceLocked) {
-    alert("Face must be locked");
-    return;
-  }
-
-  const chars = getCharacters();
-  if (chars.some(c => c.name.toLowerCase() === name.toLowerCase())) {
-    alert("Character already exists");
-    return;
-  }
-
-  chars.push({
-    name,
-    desc,
-    face: faceData
-  });
-
-  saveCharacters(chars);
-  renderList();
-  alert("Character saved");
+/* ---------- SAVE CHARACTER ---------- */
+document.getElementById('save-character').onclick=()=>{
+  const n=char-name.value.trim(),d=char-desc.value.trim();
+  if(!n||!d||!faceLocked){alert("Complete character first");return;}
+  const c=getChars();
+  if(c.some(x=>x.name.toLowerCase()==n.toLowerCase()))return alert("Already exists");
+  c.push({name:n,desc:d,face:faceData});
+  saveChars(c);render();
 };
 
-/* ---------------- RENDER LIST ---------------- */
-const list = document.getElementById('character-list');
-let activeCharacter = null;
-
-function renderList(){
-  list.innerHTML = "";
-  getCharacters().forEach(c=>{
-    const li = document.createElement("li");
-    li.textContent = c.name;
-    li.onclick = ()=> activeCharacter = c;
+/* ---------- LIST ---------- */
+const list=document.getElementById('character-list');
+let active=null;
+function render(){
+  list.innerHTML='';
+  getChars().forEach(x=>{
+    const li=document.createElement('li');
+    li.textContent=x.name;
+    li.onclick=()=>active=x;
     list.appendChild(li);
   });
 }
-renderList();
+render();
 
-/* ---------------- PROMPT ENGINE ---------------- */
-document.getElementById('generate-prompt').onclick = () => {
-  if (!activeCharacter) {
-    alert("Select a character first");
-    return;
-  }
-
-  const exp = document.getElementById('expression').value;
-  const intensity = document.getElementById('intensity').value;
-  const location = document.getElementById('location').value;
-  const time = document.getElementById('time').value;
-  const lighting = document.getElementById('lighting').value;
-  const mood = document.getElementById('mood').value;
-
-  const finalPrompt = `
+/* ---------- GENERATE IMAGE (DEMO) ---------- */
+document.getElementById('generate-image').onclick=()=>{
+  if(!active)return alert("Select character");
+  const prompt=`
 Manhwa style illustration,
-adult character: ${activeCharacter.name},
-${activeCharacter.desc},
-same face as reference image,
-facial expression: ${exp} (${intensity}),
-scene location: ${location},
-time: ${time},
-lighting: ${lighting},
-background mood: ${mood},
-high detail, clean lines, anime shading
-  `.trim();
+${active.name},
+${active.desc},
+expression ${expression.value} (${intensity.value}),
+${location.value}, ${time.value},
+${lighting.value}, ${mood.value}
+`.trim();
 
-  document.getElementById('final-prompt').textContent = finalPrompt;
+  document.getElementById('final-prompt').textContent=prompt;
+  loading.textContent="Generating image…";
+  generated-image.style.display="none";
+
+  setTimeout(()=>{
+    generated-image.src="https://placekitten.com/768/768";
+    generated-image.style.display="block";
+    loading.textContent="";
+  },2000);
 };
 </script>
 
