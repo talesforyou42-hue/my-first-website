@@ -9,30 +9,29 @@
 /* ===== GLOBAL ===== */
 body{
   margin:0;
-  font-family:Arial, Helvetica, sans-serif;
-  background:linear-gradient(135deg,#ff9a9e,#fad0c4);
-  color:#222;
+  font-family:Arial, sans-serif;
+  background:linear-gradient(135deg,#fdfbfb,#ebedee);
+  color:#333;
 }
 
 header{
   text-align:center;
   padding:2rem 1rem;
-  background:linear-gradient(90deg,#667eea,#764ba2);
-  color:#fff;
+  background:linear-gradient(90deg,#ffecd2,#fcb69f);
 }
 
 section{
-  background:#fff;
+  background:#ffffff;
   margin:1.5rem auto;
   padding:1.5rem;
   max-width:900px;
-  border-radius:14px;
-  box-shadow:0 10px 30px rgba(0,0,0,.15);
+  border-radius:16px;
+  box-shadow:0 8px 25px rgba(0,0,0,.12);
 }
 
 h2{
   margin-top:0;
-  color:#764ba2;
+  color:#ff7a5a;
 }
 
 label{font-weight:bold}
@@ -42,15 +41,15 @@ input, textarea, select{
   padding:10px;
   margin-top:6px;
   margin-bottom:14px;
-  border-radius:8px;
+  border-radius:10px;
   border:1px solid #ccc;
 }
 
 button{
-  padding:12px 20px;
+  padding:12px 22px;
   border:none;
-  border-radius:25px;
-  background:linear-gradient(90deg,#ff758c,#ff7eb3);
+  border-radius:30px;
+  background:linear-gradient(90deg,#ff7a5a,#ffb347);
   color:#fff;
   font-weight:bold;
   cursor:pointer;
@@ -58,22 +57,14 @@ button{
 button:hover{opacity:.9}
 
 ul{padding-left:20px}
-li{cursor:pointer;margin:6px 0}
-li:hover{color:#ff758c}
+li{margin:6px 0;cursor:pointer}
+li:hover{color:#ff7a5a}
 
 .prompt-box{
-  background:#f3f3f3;
+  background:#f7f7f7;
   padding:14px;
-  border-radius:10px;
+  border-radius:12px;
   white-space:pre-wrap;
-}
-
-#loading{font-style:italic;color:#666}
-#image{
-  display:none;
-  margin-top:15px;
-  max-width:100%;
-  border-radius:14px;
 }
 </style>
 </head>
@@ -82,7 +73,7 @@ li:hover{color:#ff758c}
 
 <header>
 <h1>Writer Visual Tool</h1>
-<p>Prompt → Wait → Image (same page)</p>
+<p>Create characters & scenes without leaving the site</p>
 </header>
 
 <!-- CHARACTER CREATOR -->
@@ -92,9 +83,13 @@ li:hover{color:#ff758c}
 <label>Character Name</label>
 <input id="char-name" placeholder="Asha">
 
-<label>Character Identity (face & vibe in simple words)</label>
+<label>Face Signature (locks face)</label>
+<textarea id="face-sign"
+placeholder="Oval face, sharp eyes, small lips, calm confident look"></textarea>
+
+<label>Character Style & Body</label>
 <textarea id="char-desc"
-placeholder="Manhwa style adult woman, long hair, calm seductive face"></textarea>
+placeholder="Manhwa style adult woman, long hair, elegant posture"></textarea>
 
 <button id="save-character">Save Character</button>
 </section>
@@ -131,15 +126,12 @@ placeholder="Manhwa style adult woman, long hair, calm seductive face"></textare
 <label>Mood</label>
 <input id="mood" placeholder="Quiet, intimate, tense">
 
-<button id="generate">Generate Image</button>
-
-<p id="loading"></p>
-<img id="image">
+<button id="generate">Generate Prompt</button>
 </section>
 
 <!-- OUTPUT -->
 <section>
-<h2>Final Prompt</h2>
+<h2>Final Image Prompt</h2>
 <div id="final-prompt" class="prompt-box">No prompt yet.</div>
 </section>
 
@@ -157,9 +149,13 @@ const saveChars=c=>localStorage.setItem("chars",JSON.stringify(c));
 /* ===== SAVE CHARACTER ===== */
 document.getElementById("save-character").onclick=()=>{
   const name=document.getElementById("char-name").value.trim();
+  const face=document.getElementById("face-sign").value.trim();
   const desc=document.getElementById("char-desc").value.trim();
 
-  if(!name||!desc){alert("Fill both fields");return;}
+  if(!name||!face||!desc){
+    alert("Fill all fields");
+    return;
+  }
 
   const chars=getChars();
   if(chars.some(c=>c.name.toLowerCase()===name.toLowerCase())){
@@ -167,16 +163,20 @@ document.getElementById("save-character").onclick=()=>{
     return;
   }
 
-  chars.push({name,desc});
+  chars.push({name,face,desc});
   saveChars(chars);
+
   document.getElementById("char-name").value="";
+  document.getElementById("face-sign").value="";
   document.getElementById("char-desc").value="";
+
   render();
 };
 
 /* ===== RENDER LIST ===== */
 let active=null;
 const list=document.getElementById("list");
+
 function render(){
   list.innerHTML="";
   getChars().forEach(c=>{
@@ -188,30 +188,25 @@ function render(){
 }
 render();
 
-/* ===== GENERATE IMAGE (DEMO) ===== */
+/* ===== PROMPT ENGINE ===== */
 document.getElementById("generate").onclick=()=>{
-  if(!active){alert("Select character");return;}
+  if(!active){
+    alert("Select a character first");
+    return;
+  }
 
   const prompt=`
 Manhwa style illustration,
-${active.name},
-${active.desc},
-expression ${expression.value} (${intensity.value}),
-${location.value}, ${time.value},
-mood ${mood.value},
-high quality, clean lines
+same character face: ${active.face},
+character body & style: ${active.desc},
+expression: ${expression.value} (${intensity.value}),
+location: ${location.value},
+time: ${time.value},
+mood: ${mood.value},
+high quality, clean lines, consistent face
 `.trim();
 
   document.getElementById("final-prompt").textContent=prompt;
-
-  loading.textContent="Generating image…";
-  image.style.display="none";
-
-  setTimeout(()=>{
-    image.src="https://placekitten.com/768/768";
-    image.style.display="block";
-    loading.textContent="";
-  },2000);
 };
 </script>
 
