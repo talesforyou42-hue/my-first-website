@@ -6,101 +6,74 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
-/* ---------- GLOBAL ---------- */
+/* ===== GLOBAL ===== */
 body{
-  font-family: 'Segoe UI', sans-serif;
   margin:0;
-  background:linear-gradient(135deg,#1e1e1e,#3a3a3a);
-  color:#eee;
+  font-family:Arial, Helvetica, sans-serif;
+  background:linear-gradient(135deg,#ff9a9e,#fad0c4);
+  color:#222;
 }
 
-/* ---------- HEADER ---------- */
 header{
   text-align:center;
   padding:2rem 1rem;
-  background:linear-gradient(90deg,#ff4d6d,#845ec2);
-}
-header h1{
-  margin:0;
-  font-size:2.2rem;
-}
-header p{
-  opacity:.9;
-}
-
-/* ---------- SECTIONS ---------- */
-section{
-  background:#1f1f1f;
-  margin:1.5rem auto;
-  padding:1.5rem;
-  border-radius:14px;
-  max-width:900px;
-  box-shadow:0 10px 30px rgba(0,0,0,.4);
-}
-
-h2,h3{
-  color:#ffd369;
-  margin-top:0;
-}
-
-/* ---------- FORM ---------- */
-textarea,input,select{
-  width:100%;
-  margin-top:6px;
-  padding:10px;
-  border-radius:8px;
-  border:none;
-  background:#2b2b2b;
+  background:linear-gradient(90deg,#667eea,#764ba2);
   color:#fff;
 }
 
-textarea::placeholder,input::placeholder{
-  color:#aaa;
+section{
+  background:#fff;
+  margin:1.5rem auto;
+  padding:1.5rem;
+  max-width:900px;
+  border-radius:14px;
+  box-shadow:0 10px 30px rgba(0,0,0,.15);
+}
+
+h2{
+  margin-top:0;
+  color:#764ba2;
+}
+
+label{font-weight:bold}
+
+input, textarea, select{
+  width:100%;
+  padding:10px;
+  margin-top:6px;
+  margin-bottom:14px;
+  border-radius:8px;
+  border:1px solid #ccc;
 }
 
 button{
-  padding:10px 16px;
+  padding:12px 20px;
   border:none;
-  border-radius:20px;
-  background:linear-gradient(90deg,#ff4d6d,#ffb703);
-  color:#000;
-  font-weight:600;
+  border-radius:25px;
+  background:linear-gradient(90deg,#ff758c,#ff7eb3);
+  color:#fff;
+  font-weight:bold;
   cursor:pointer;
 }
 button:hover{opacity:.9}
 
-/* ---------- FACE ---------- */
-img{
-  max-width:150px;
-  border-radius:10px;
-  margin-top:10px;
-}
-.locked{color:#4dff88;font-weight:bold}
-
-/* ---------- LIST ---------- */
 ul{padding-left:20px}
 li{cursor:pointer;margin:6px 0}
-li:hover{color:#ffd369}
+li:hover{color:#ff758c}
 
-/* ---------- PROMPT ---------- */
 .prompt-box{
-  background:#111;
+  background:#f3f3f3;
   padding:14px;
   border-radius:10px;
   white-space:pre-wrap;
-  border:1px dashed #444;
 }
 
-/* ---------- IMAGE PREVIEW ---------- */
-#generated-image{
-  max-width:100%;
+#loading{font-style:italic;color:#666}
+#image{
   display:none;
   margin-top:15px;
+  max-width:100%;
   border-radius:14px;
-}
-#loading{
-  color:#aaa;
-  font-style:italic;
 }
 </style>
 </head>
@@ -109,27 +82,19 @@ li:hover{color:#ffd369}
 
 <header>
 <h1>Writer Visual Tool</h1>
-<p>Manhwa-style character & scene studio</p>
+<p>Prompt → Wait → Image (same page)</p>
 </header>
 
 <!-- CHARACTER CREATOR -->
 <section>
-<h2>Character Creator (Face Locked)</h2>
+<h2>Character Creator</h2>
 
 <label>Character Name</label>
 <input id="char-name" placeholder="Asha">
 
-<label>Character Description</label>
+<label>Character Identity (face & vibe in simple words)</label>
 <textarea id="char-desc"
-placeholder="Manhwa style adult woman, calm, confident"></textarea>
-
-<h3>Face Lock (Required)</h3>
-<input type="file" id="face-upload" accept="image/*">
-<img id="face-preview" style="display:none">
-<p id="face-status">No face locked</p>
-<button id="lock-face">Lock Face</button>
-
-<hr>
+placeholder="Manhwa style adult woman, long hair, calm seductive face"></textarea>
 
 <button id="save-character">Save Character</button>
 </section>
@@ -138,7 +103,7 @@ placeholder="Manhwa style adult woman, calm, confident"></textarea>
 <section>
 <h2>Scene Builder</h2>
 
-<label>Face Expression</label>
+<label>Expression</label>
 <select id="expression">
 <option>Neutral</option>
 <option>Smile</option>
@@ -147,14 +112,14 @@ placeholder="Manhwa style adult woman, calm, confident"></textarea>
 <option>Shy</option>
 </select>
 
-<label>Emotion Intensity</label>
+<label>Intensity</label>
 <select id="intensity">
 <option>Low</option>
 <option>Medium</option>
 <option>High</option>
 </select>
 
-<label>Scene Location</label>
+<label>Location</label>
 <input id="location" placeholder="Bedroom">
 
 <label>Time</label>
@@ -163,104 +128,88 @@ placeholder="Manhwa style adult woman, calm, confident"></textarea>
 <option>Night</option>
 </select>
 
-<label>Lighting</label>
-<input id="lighting" placeholder="Soft lamp light">
+<label>Mood</label>
+<input id="mood" placeholder="Quiet, intimate, tense">
 
-<label>Background Mood</label>
-<input id="mood" placeholder="Quiet, tense, intimate">
-
-<button id="generate-image">Generate Image</button>
+<button id="generate">Generate Image</button>
 
 <p id="loading"></p>
-<img id="generated-image">
+<img id="image">
 </section>
 
 <!-- OUTPUT -->
 <section>
-<h2>Final Image Prompt</h2>
+<h2>Final Prompt</h2>
 <div id="final-prompt" class="prompt-box">No prompt yet.</div>
 </section>
 
-<!-- CHARACTER LIST -->
+<!-- LIST -->
 <section>
 <h2>Saved Characters</h2>
-<ul id="character-list"></ul>
+<ul id="list"></ul>
 </section>
 
 <script>
-/* ---------- FACE LOCK ---------- */
-const faceUpload=document.getElementById('face-upload');
-const facePreview=document.getElementById('face-preview');
-const faceStatus=document.getElementById('face-status');
-let faceLocked=false,faceData=null;
+/* ===== STORAGE ===== */
+const getChars=()=>JSON.parse(localStorage.getItem("chars"))||[];
+const saveChars=c=>localStorage.setItem("chars",JSON.stringify(c));
 
-faceUpload.onchange=()=>{
-  const f=faceUpload.files[0];
-  if(!f)return;
-  const r=new FileReader();
-  r.onload=()=>{
-    facePreview.src=r.result;
-    facePreview.style.display='block';
-    faceData=r.result;
-  };
-  r.readAsDataURL(f);
+/* ===== SAVE CHARACTER ===== */
+document.getElementById("save-character").onclick=()=>{
+  const name=document.getElementById("char-name").value.trim();
+  const desc=document.getElementById("char-desc").value.trim();
+
+  if(!name||!desc){alert("Fill both fields");return;}
+
+  const chars=getChars();
+  if(chars.some(c=>c.name.toLowerCase()===name.toLowerCase())){
+    alert("Character name already exists");
+    return;
+  }
+
+  chars.push({name,desc});
+  saveChars(chars);
+  document.getElementById("char-name").value="";
+  document.getElementById("char-desc").value="";
+  render();
 };
 
-document.getElementById('lock-face').onclick=()=>{
-  if(!faceData){alert("Upload face first");return;}
-  faceLocked=true;
-  faceUpload.disabled=true;
-  faceStatus.textContent="Face Locked ✅";
-  faceStatus.className="locked";
-};
-
-/* ---------- STORAGE ---------- */
-const getChars=()=>JSON.parse(localStorage.getItem("characters"))||[];
-const saveChars=c=>localStorage.setItem("characters",JSON.stringify(c));
-
-/* ---------- SAVE CHARACTER ---------- */
-document.getElementById('save-character').onclick=()=>{
-  const n=char-name.value.trim(),d=char-desc.value.trim();
-  if(!n||!d||!faceLocked){alert("Complete character first");return;}
-  const c=getChars();
-  if(c.some(x=>x.name.toLowerCase()==n.toLowerCase()))return alert("Already exists");
-  c.push({name:n,desc:d,face:faceData});
-  saveChars(c);render();
-};
-
-/* ---------- LIST ---------- */
-const list=document.getElementById('character-list');
+/* ===== RENDER LIST ===== */
 let active=null;
+const list=document.getElementById("list");
 function render(){
-  list.innerHTML='';
-  getChars().forEach(x=>{
-    const li=document.createElement('li');
-    li.textContent=x.name;
-    li.onclick=()=>active=x;
+  list.innerHTML="";
+  getChars().forEach(c=>{
+    const li=document.createElement("li");
+    li.textContent=c.name;
+    li.onclick=()=>active=c;
     list.appendChild(li);
   });
 }
 render();
 
-/* ---------- GENERATE IMAGE (DEMO) ---------- */
-document.getElementById('generate-image').onclick=()=>{
-  if(!active)return alert("Select character");
+/* ===== GENERATE IMAGE (DEMO) ===== */
+document.getElementById("generate").onclick=()=>{
+  if(!active){alert("Select character");return;}
+
   const prompt=`
 Manhwa style illustration,
 ${active.name},
 ${active.desc},
 expression ${expression.value} (${intensity.value}),
 ${location.value}, ${time.value},
-${lighting.value}, ${mood.value}
+mood ${mood.value},
+high quality, clean lines
 `.trim();
 
-  document.getElementById('final-prompt').textContent=prompt;
+  document.getElementById("final-prompt").textContent=prompt;
+
   loading.textContent="Generating image…";
-  generated-image.style.display="none";
+  image.style.display="none";
 
   setTimeout(()=>{
-    generated-image.src="https://placekitten.com/768/768";
-    generated-image.style.display="block";
+    image.src="https://placekitten.com/768/768";
+    image.style.display="block";
     loading.textContent="";
   },2000);
 };
