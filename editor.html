@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Manhwa Editor</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body{
+  margin:0;
+  font-family:"Segoe UI", Arial, sans-serif;
+  background:#ececec;
+}
+
+/* TOP BAR */
+.topbar{
+  background:#111;
+  color:#fff;
+  padding:14px;
+  text-align:center;
+  font-weight:600;
+}
+
+/* WORK AREA */
+.workspace{
+  display:flex;
+  justify-content:center;
+  padding:20px;
+}
+
+/* MANHWA PAGE */
+.page{
+  background:white;
+  width:360px;
+  min-height:90vh;
+  border-radius:10px;
+  box-shadow:0 10px 30px rgba(0,0,0,0.2);
+  padding:16px;
+}
+
+/* PANEL */
+.panel{
+  border:2px dashed #ccc;
+  border-radius:8px;
+  height:220px;
+  margin-bottom:14px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:#999;
+  font-size:0.9rem;
+}
+
+/* INPUT BAR */
+.input-bar{
+  position:fixed;
+  bottom:0;
+  left:0;
+  width:100%;
+  background:#fff;
+  border-top:1px solid #ccc;
+  padding:10px;
+  display:flex;
+  gap:8px;
+}
+
+.input-bar input{
+  flex:1;
+  padding:10px;
+  border-radius:20px;
+  border:1px solid #ccc;
+  outline:none;
+}
+
+.input-bar button{
+  padding:10px 16px;
+  border:none;
+  border-radius:20px;
+  background:#ff5f6d;
+  color:white;
+  font-weight:600;
+}
+</style>
+</head>
+
+<body>
+
+<div class="topbar">
+  Manhwa Editor — Blank Page
+</div>
+
+<div class="workspace">
+  <div class="page">
+
+    <div class="panel">Manhwa Panel (Image will appear here)</div>
+    <div class="panel">Manhwa Panel (Image will appear here)</div>
+    <div class="panel">Manhwa Panel (Image will appear here)</div>
+
+  </div>
+</div>
+
+<div class="input-bar">
+  <input type="text" placeholder="Describe the scene you want...">
+  <button>Create</button>
+</div>
+
+</body>
+</html>
