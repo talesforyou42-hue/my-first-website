@@ -8,31 +8,17 @@
 <style>
 body{
   margin:0;
-  background:#bdbdbd;
-  font-family:Arial, sans-serif;
+  font-family:"Segoe UI", Arial, sans-serif;
+  background:#ececec;
 }
 
 /* TOP BAR */
 .topbar{
   background:#111;
   color:#fff;
-  padding:12px;
+  padding:14px;
   text-align:center;
   font-weight:600;
-}
-
-/* TOOLBAR */
-.toolbar{
-  text-align:center;
-  padding:10px;
-}
-button{
-  padding:10px 20px;
-  border:none;
-  border-radius:25px;
-  background:linear-gradient(90deg,#ff512f,#dd2476);
-  color:#fff;
-  font-weight:bold;
 }
 
 /* WORK AREA */
@@ -44,94 +30,79 @@ button{
 
 /* MANHWA PAGE */
 .page{
-  width:380px;
-  height:650px;
-  background:#fff;
-  position:relative;
-  box-shadow:0 0 25px rgba(0,0,0,.35);
+  background:white;
+  width:360px;
+  min-height:90vh;
+  border-radius:10px;
+  box-shadow:0 10px 30px rgba(0,0,0,0.2);
+  padding:16px;
 }
 
-/* PANEL BOX */
+/* PANEL */
 .panel{
-  position:absolute;
-  border:2px dashed #444;
-  background:#fdfdfd;
-  min-width:80px;
-  min-height:80px;
-  resize:both;
-  overflow:hidden;
-  cursor:move;
+  border:2px dashed #ccc;
+  border-radius:8px;
+  height:220px;
+  margin-bottom:14px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:#999;
+  font-size:0.9rem;
 }
 
-/* PANEL TEXT */
-.panel span{
-  font-size:12px;
-  color:#777;
-  padding:4px;
-  display:block;
+/* INPUT BAR */
+.input-bar{
+  position:fixed;
+  bottom:0;
+  left:0;
+  width:100%;
+  background:#fff;
+  border-top:1px solid #ccc;
+  padding:10px;
+  display:flex;
+  gap:8px;
+}
+
+.input-bar input{
+  flex:1;
+  padding:10px;
+  border-radius:20px;
+  border:1px solid #ccc;
+  outline:none;
+}
+
+.input-bar button{
+  padding:10px 16px;
+  border:none;
+  border-radius:20px;
+  background:#ff5f6d;
+  color:white;
+  font-weight:600;
 }
 </style>
 </head>
 
 <body>
 
-<div class="topbar">Manhwa Page Editor</div>
-
-<div class="toolbar">
-  <button onclick="addPanel()">➕ Add Panel</button>
+<div class="topbar">
+  Manhwa Editor — Blank Page
 </div>
 
 <div class="workspace">
-  <div class="page" id="page"></div>
+  <div class="page">
+
+    <div class="panel">Manhwa Panel (Image will appear here)</div>
+    <div class="panel">Manhwa Panel (Image will appear here)</div>
+    <div class="panel">Manhwa Panel (Image will appear here)</div>
+
+  </div>
 </div>
 
-<script>
-let activePanel = null;
-let offsetX = 0;
-let offsetY = 0;
-
-/* ADD PANEL */
-function addPanel(){
-  const panel = document.createElement("div");
-  panel.className = "panel";
-  panel.style.width = "140px";
-  panel.style.height = "120px";
-  panel.style.left = "20px";
-  panel.style.top = "20px";
-
-  const label = document.createElement("span");
-  label.innerText = "Empty Panel";
-  panel.appendChild(label);
-
-  panel.onmousedown = startDrag;
-  document.getElementById("page").appendChild(panel);
-}
-
-/* DRAG */
-function startDrag(e){
-  activePanel = e.target.closest(".panel");
-  offsetX = e.offsetX;
-  offsetY = e.offsetY;
-
-  document.onmousemove = drag;
-  document.onmouseup = stopDrag;
-}
-
-function drag(e){
-  if(!activePanel) return;
-  const page = document.getElementById("page");
-  const rect = page.getBoundingClientRect();
-
-  activePanel.style.left = (e.clientX - rect.left - offsetX) + "px";
-  activePanel.style.top  = (e.clientY - rect.top  - offsetY) + "px";
-}
-
-function stopDrag(){
-  document.onmousemove = null;
-  document.onmouseup = null;
-  activePanel = null;
-}
-</script>
+<div class="input-bar">
+  <input type="text" placeholder="Describe the scene you want...">
+  <button>Create</button>
+</div>
 
 </body>
 </html>
