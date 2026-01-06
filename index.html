@@ -75,8 +75,10 @@
     localStorage.setItem('characters', JSON.stringify(characters));
 
     resultText.innerText =
-      `Character Saved: ${name} | Hair: ${hair} | Body: ${body}`;
-  });
+  `Character Saved: ${name} | Hair: ${hair} | Body: ${body}`;
+
+renderCharacters();
+});
   const list = document.getElementById('character-list');
 
   function renderCharacters() {
@@ -91,8 +93,6 @@
   }
 
   // Call after save
-  saveBtn.addEventListener('click', renderCharacters);
-
   // Call on page load
   renderCharacters();
 </script>
