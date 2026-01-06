@@ -77,4 +77,22 @@
     resultText.innerText =
       `Character Saved: ${name} | Hair: ${hair} | Body: ${body}`;
   });
-  </script>
+  const list = document.getElementById('character-list');
+
+  function renderCharacters() {
+    list.innerHTML = '';
+    const characters = JSON.parse(localStorage.getItem('characters')) || [];
+
+    characters.forEach((char, index) => {
+      const li = document.createElement('li');
+      li.textContent = `${index + 1}. ${char.name} | ${char.hair} | ${char.body}`;
+      list.appendChild(li);
+    });
+  }
+
+  // Call after save
+  saveBtn.addEventListener('click', renderCharacters);
+
+  // Call on page load
+  renderCharacters();
+</script>
