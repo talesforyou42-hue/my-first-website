@@ -12,16 +12,38 @@ body{
   display:flex;
   justify-content:center;
   align-items:center;
-  font-family: "Segoe UI", Arial, sans-serif;
+  font-family:"Segoe UI", Arial, sans-serif;
   background: linear-gradient(135deg,#ffd3b6,#ffaaa5);
 }
 
-/* LINK LOOKS LIKE TITLE */
-a{
-  font-size:2.6rem;
+/* CENTER WRAPPER */
+.container{
+  text-align:center;
+}
+
+/* TITLE */
+h1{
+  margin:0;
+  font-size:2.8rem;
   font-weight:800;
-  text-decoration:none;
   background:linear-gradient(90deg,#ff7a18,#ffb347,#ff7a18);
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+}
+
+/* SUBTITLE */
+p{
+  margin:12px 0 40px;
+  font-size:1.05rem;
+  color:#333;
+}
+
+/* LINK */
+a{
+  font-size:2.2rem;
+  font-weight:700;
+  text-decoration:none;
+  background:linear-gradient(90deg,#ff512f,#dd2476,#ff512f);
   -webkit-background-clip:text;
   -webkit-text-fill-color:transparent;
   transition:transform .2s ease;
@@ -35,8 +57,13 @@ a:hover{
 
 <body>
 
-<!-- ONLY CENTER LINK -->
-<a href="editor.html">Start your Manhwa here</a>
+<div class="container">
+  <h1>Writer Visual Tool</h1>
+  <p>Create characters & scenes without leaving the site</p>
+
+  <!-- ONLY LINK -->
+  <a href="editor.html">Start your Manhwa here</a>
+</div>
 
 </body>
 </html>
