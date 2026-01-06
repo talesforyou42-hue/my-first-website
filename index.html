@@ -1,163 +1,219 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Writer Visual Tool</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <style>
-    body{font-family:sans-serif;margin:0;padding:0;background:#f4f4f4;}
-    header{background:#222;color:#fff;text-align:center;padding:1rem;}
-    section{background:#fff;margin:1rem;padding:1rem;border-radius:6px;}
-    h2{margin-top:0;}
-    textarea{width:100%;height:90px;}
-    ul{padding-left:20px;}
-    button{padding:8px 12px;margin-top:8px;}
-    img{max-width:150px;border-radius:8px;margin-top:8px;}
-    .locked{color:green;font-weight:bold;}
-  </style>
+<meta charset="UTF-8">
+<title>Writer Visual Tool</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body{font-family:sans-serif;background:#f4f4f4;margin:0}
+header{background:#222;color:#fff;text-align:center;padding:1rem}
+section{background:#fff;margin:1rem;padding:1rem;border-radius:6px}
+h2,h3{margin-top:0}
+textarea,input,select{width:100%;margin-top:6px;padding:6px}
+button{padding:8px 12px;margin-top:10px}
+img{max-width:150px;border-radius:8px;margin-top:8px}
+.locked{color:green;font-weight:bold}
+ul{padding-left:20px}
+.prompt-box{background:#eee;padding:10px;border-radius:6px;white-space:pre-wrap}
+</style>
 </head>
+
 <body>
 
 <header>
-  <h1>Writer Visual Tool</h1>
-  <p>Plan characters and scenes visually</p>
+<h1>Writer Visual Tool</h1>
+<p>Manhwa-style character & scene studio</p>
 </header>
 
-<!-- Character Creator -->
+<!-- CHARACTER CREATOR -->
 <section>
-  <h2>Prompt Based Character Creator</h2>
+<h2>Character Creator (Face Locked)</h2>
 
-  <label>Character Name</label><br>
-  <input type="text" id="char-name" placeholder="Enter character name"><br><br>
+<label>Character Name</label>
+<input id="char-name" placeholder="Asha">
 
-  <label>Describe Character (simple words)</label><br>
-  <textarea id="char-prompt"
-    placeholder="Example: Manhwa style mature woman, long hair, confident, seductive vibe"></textarea><br><br>
+<label>Character Description (simple words)</label>
+<textarea id="char-desc" placeholder="Manhwa style adult woman, calm, confident"></textarea>
 
-  <!-- FACE LOCK UI -->
-  <h3>Face Lock (Required)</h3>
-  <input type="file" id="face-upload" accept="image/*"><br>
-  <img id="face-preview" style="display:none;">
-  <p id="face-status">No face locked</p>
-  <button id="lock-face-btn">Lock Face</button>
+<h3>Face Lock (Required)</h3>
+<input type="file" id="face-upload" accept="image/*">
+<img id="face-preview" style="display:none">
+<p id="face-status">No face locked</p>
+<button id="lock-face">Lock Face</button>
 
-  <hr>
+<hr>
 
-  <button id="save-btn">Save Character</button>
+<button id="save-character">Save Character</button>
 </section>
 
-<!-- Result -->
+<!-- SCENE & EXPRESSION -->
 <section>
-  <h2>Result</h2>
-  <p id="result-text">No character yet.</p>
-  <ul id="character-list"></ul>
+<h2>Scene Builder</h2>
+
+<label>Face Expression</label>
+<select id="expression">
+<option>Neutral</option>
+<option>Smile</option>
+<option>Seductive</option>
+<option>Angry</option>
+<option>Shy</option>
+</select>
+
+<label>Emotion Intensity</label>
+<select id="intensity">
+<option>Low</option>
+<option>Medium</option>
+<option>High</option>
+</select>
+
+<label>Scene Location</label>
+<input id="location" placeholder="Bedroom">
+
+<label>Time</label>
+<select id="time">
+<option>Day</option>
+<option>Night</option>
+</select>
+
+<label>Lighting</label>
+<input id="lighting" placeholder="Soft lamp light">
+
+<label>Background Mood</label>
+<input id="mood" placeholder="Quiet, tense, intimate">
+
+<button id="generate-prompt">Generate Image Prompt</button>
+</section>
+
+<!-- OUTPUT -->
+<section>
+<h2>Final Image Prompt (Ready for AI)</h2>
+<div id="final-prompt" class="prompt-box">No prompt yet.</div>
+</section>
+
+<!-- CHARACTER LIST -->
+<section>
+<h2>Saved Characters</h2>
+<ul id="character-list"></ul>
 </section>
 
 <script>
-const saveBtn = document.getElementById('save-btn');
-const resultText = document.getElementById('result-text');
-const list = document.getElementById('character-list');
-
+/* ---------------- FACE LOCK ---------------- */
 const faceUpload = document.getElementById('face-upload');
 const facePreview = document.getElementById('face-preview');
 const faceStatus = document.getElementById('face-status');
-const lockFaceBtn = document.getElementById('lock-face-btn');
+const lockFaceBtn = document.getElementById('lock-face');
 
 let faceLocked = false;
-let faceImageData = null;
+let faceData = null;
 
-/* ---------- FACE LOCK LOGIC ---------- */
-faceUpload.addEventListener('change', () => {
+faceUpload.onchange = () => {
   const file = faceUpload.files[0];
   if (!file) return;
-
   const reader = new FileReader();
   reader.onload = () => {
     facePreview.src = reader.result;
     facePreview.style.display = 'block';
-    faceImageData = reader.result;
+    faceData = reader.result;
   };
   reader.readAsDataURL(file);
-});
+};
 
-lockFaceBtn.addEventListener('click', () => {
-  if (!faceImageData) {
-    alert('Please upload a face image first');
+lockFaceBtn.onclick = () => {
+  if (!faceData) {
+    alert("Upload a face image first");
     return;
   }
   faceLocked = true;
   faceUpload.disabled = true;
   lockFaceBtn.disabled = true;
-  faceStatus.textContent = 'Face Locked ✅';
-  faceStatus.className = 'locked';
-});
+  faceStatus.textContent = "Face Locked ✅";
+  faceStatus.className = "locked";
+};
 
-/* ---------- STORAGE HELPERS ---------- */
-function getCharacters() {
-  return JSON.parse(localStorage.getItem('characters')) || [];
+/* ---------------- STORAGE ---------------- */
+function getCharacters(){
+  return JSON.parse(localStorage.getItem("characters")) || [];
+}
+function saveCharacters(c){
+  localStorage.setItem("characters", JSON.stringify(c));
 }
 
-function saveCharacters(data) {
-  localStorage.setItem('characters', JSON.stringify(data));
-}
+/* ---------------- SAVE CHARACTER ---------------- */
+document.getElementById('save-character').onclick = () => {
+  const name = document.getElementById('char-name').value.trim();
+  const desc = document.getElementById('char-desc').value.trim();
 
-/* ---------- RENDER LIST ---------- */
-function renderCharacters() {
-  list.innerHTML = '';
-  const characters = getCharacters();
+  if (!name || !desc) {
+    alert("Enter name and description");
+    return;
+  }
+  if (!faceLocked) {
+    alert("Face must be locked");
+    return;
+  }
 
-  characters.forEach((c, i) => {
-    const li = document.createElement('li');
-    li.textContent = `${i+1}. ${c.name} → ${c.prompt}`;
+  const chars = getCharacters();
+  if (chars.some(c => c.name.toLowerCase() === name.toLowerCase())) {
+    alert("Character already exists");
+    return;
+  }
+
+  chars.push({
+    name,
+    desc,
+    face: faceData
+  });
+
+  saveCharacters(chars);
+  renderList();
+  alert("Character saved");
+};
+
+/* ---------------- RENDER LIST ---------------- */
+const list = document.getElementById('character-list');
+let activeCharacter = null;
+
+function renderList(){
+  list.innerHTML = "";
+  getCharacters().forEach(c=>{
+    const li = document.createElement("li");
+    li.textContent = c.name;
+    li.onclick = ()=> activeCharacter = c;
     list.appendChild(li);
   });
-
-  if (characters.length > 0) {
-    const last = characters[characters.length - 1];
-    resultText.innerText =
-      `Last Character: ${last.name} | Prompt: ${last.prompt}`;
-  }
 }
+renderList();
 
-/* ---------- SAVE CHARACTER ---------- */
-saveBtn.addEventListener('click', () => {
-  const name = document.getElementById('char-name').value.trim();
-  const prompt = document.getElementById('char-prompt').value.trim();
-
-  if (!name || !prompt) {
-    alert('Please enter name and character description');
+/* ---------------- PROMPT ENGINE ---------------- */
+document.getElementById('generate-prompt').onclick = () => {
+  if (!activeCharacter) {
+    alert("Select a character first");
     return;
   }
 
-  if (!faceLocked) {
-    alert('You must lock a face before saving character');
-    return;
-  }
+  const exp = document.getElementById('expression').value;
+  const intensity = document.getElementById('intensity').value;
+  const location = document.getElementById('location').value;
+  const time = document.getElementById('time').value;
+  const lighting = document.getElementById('lighting').value;
+  const mood = document.getElementById('mood').value;
 
-  const characters = getCharacters();
+  const finalPrompt = `
+Manhwa style illustration,
+adult character: ${activeCharacter.name},
+${activeCharacter.desc},
+same face as reference image,
+facial expression: ${exp} (${intensity}),
+scene location: ${location},
+time: ${time},
+lighting: ${lighting},
+background mood: ${mood},
+high detail, clean lines, anime shading
+  `.trim();
 
-  if (characters.some(c => c.name.toLowerCase() === name.toLowerCase())) {
-    alert('Character with this name already exists');
-    return;
-  }
-
-  characters.push({
-    name,
-    prompt,
-    face: faceImageData,   // FACE IDENTITY
-    locked: true
-  });
-
-  saveCharacters(characters);
-
-  // Reset form (not face lock)
-  document.getElementById('char-name').value = '';
-  document.getElementById('char-prompt').value = '';
-
-  renderCharacters();
-});
-
-renderCharacters();
+  document.getElementById('final-prompt').textContent = finalPrompt;
+};
 </script>
 
 </body>
