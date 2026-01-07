@@ -8,7 +8,7 @@
 <style>
 *{box-sizing:border-box}
 
-/* COLOURFUL BACKGROUND */
+/* COLOUR BG */
 body{
   margin:0;
   font-family:"Segoe UI", Arial, sans-serif;
@@ -25,15 +25,15 @@ body{
 .page-wrapper{
   display:flex;
   justify-content:center;
-  padding:20px;
+  padding:90px 20px 20px;
   width:100%;
 }
 
-/* PAGE CARD */
+/* Page */
 .page{
   background:white;
   width:380px;
-  min-height:90vh;
+  min-height:85vh;
   border-radius:18px;
   padding:14px;
   box-shadow:0 30px 60px rgba(0,0,0,0.25);
@@ -46,62 +46,68 @@ body{
   font-weight:700;
   padding:18px 0;
   font-size:1.4rem;
+  position:fixed;
+  top:0;
+  left:0;
+  width:100%;
+  background:transparent;
 }
 
-/* PANEL — 🔥 Smoky Manhwa Look */
+/* PANEL */
 .panel{
   width:100%;
-  min-height:160px;
+  min-height:220px;
   border:2px solid #222;
   border-radius:6px;
   margin-bottom:14px;
   position:relative;
   overflow:hidden;
-  font-size:0.95rem;
-  padding-bottom:26px;
+  background:#e6e6e6;
+}
 
-  background:linear-gradient(
-      to bottom right,
-      rgba(255,255,255,0.95),
-      rgba(235,235,235,0.90),
-      rgba(210,210,210,0.85)
-  );
-  backdrop-filter: blur(3px);
+/* BG */
+.bg-layer{
+  position:absolute;
+  inset:0;
   background-size:cover;
   background-position:center;
+  opacity:1;
+  z-index:1;
 }
 
-/* Text */
-.editor-box{
-  width:100%;
-  height:100%;
-  padding:10px;
-  outline:none;
-  color:#111;
-  font-weight:500;
-  z-index:2;
-  position:relative;
-  text-shadow:none;
-}
-
-/* Character PNG */
+/* Character */
 .char-img{
   position:absolute;
   bottom:0;
   left:50%;
   transform:translateX(-50%);
-  max-height:90%;
-  z-index:3;
+  max-height:95%;
+  z-index:2;
 }
 
-/* Tool Buttons */
+/* Caption */
+.caption{
+  position:absolute;
+  bottom:0;
+  left:0;
+  width:100%;
+  min-height:50px;
+  background:rgba(0,0,0,0.65);
+  color:white;
+  padding:8px 10px;
+  font-size:0.95rem;
+  z-index:3;
+  pointer-events:none;
+}
+
+/* Tools */
 .tools{
   position:absolute;
   left:6px;
   top:6px;
+  z-index:5;
   display:flex;
   gap:4px;
-  z-index:5;
 }
 .tools button{
   padding:2px 6px;
@@ -112,21 +118,19 @@ body{
   border-radius:4px;
 }
 
-/* RESIZE BAR */
+/* Resize */
 .resize-bar{
   position:absolute;
-  bottom:0;
+  bottom:-16px;
   left:0;
   width:100%;
-  height:22px;
+  height:20px;
   background:#ddd;
-  cursor:grab;
+  cursor:ns-resize;
   text-align:center;
   font-size:11px;
-  color:#333;
+  z-index:6;
   user-select:none;
-  border-top:1px solid #aaa;
-  z-index:4;
 }
 
 /* Delete */
@@ -137,28 +141,44 @@ body{
   background:red;
   color:white;
   border:none;
+  padding:3px 6px;
   font-size:11px;
-  padding:2px 6px;
   border-radius:4px;
   z-index:7;
 }
 
-/* Add Scene Button */
-.add-panel{
+/* BOTTOM INPUT BAR */
+.input-bar{
+  position:fixed;
+  bottom:0;
+  left:0;
   width:100%;
+  background:white;
+  border-top:2px solid #ccc;
+  padding:10px;
+  display:flex;
+  gap:8px;
+}
+.input-bar input{
+  flex:1;
   padding:12px;
+  border:1px solid #bbb;
+  border-radius:25px;
+  outline:none;
+  font-size:1rem;
+}
+.input-bar button{
+  padding:12px 20px;
   border:none;
-  border-radius:24px;
+  border-radius:25px;
   background:#ff5f6d;
   color:white;
   font-weight:700;
   font-size:1rem;
-  margin-top:8px;
 }
 
-/* Clear */
 .clear-all{
-  margin-top:12px;
+  margin-top:14px;
   width:100%;
   padding:10px;
   border:none;
@@ -175,62 +195,61 @@ body{
 <div class="topbar">📜 Create Your Manhwa</div>
 
 <div class="page-wrapper">
-  <div class="page" id="page">
-    <!-- Add panel button inside the page -->
-    <button class="add-panel" onclick="addPanel()">+ Add Scene</button>
-  </div>
+  <div class="page" id="page"></div>
+</div>
+
+<!-- BOTTOM TEXT FIELD -->
+<div class="input-bar">
+  <input id="scene-text" type="text" placeholder="Describe your scene... e.g. Neha enters kitchen">
+  <button onclick="createFromText()">Create</button>
 </div>
 
 <script>
-let resizing=false, activePanel=null,startY=0,startH=0;
-
-/* ------------ RESIZE SYSTEM ------------ */
-document.addEventListener("mousedown",startResize);
-document.addEventListener("mousemove",doResize);
-document.addEventListener("mouseup",stopResize);
-document.addEventListener("touchstart",startResize,{passive:false});
-document.addEventListener("touchmove",doResize,{passive:false});
-document.addEventListener("touchend",stopResize);
-
-function startResize(e){
-  const bar=e.target.closest(".resize-bar");
-  if(!bar)return;
-  resizing=true;
-  activePanel=bar.parentNode;
-  startY=e.touches?e.touches[0].clientY:e.clientY;
-  startH=activePanel.offsetHeight;
-  document.body.style.overflow="hidden";
-}
-function doResize(e){
-  if(!resizing)return;
-  const y=e.touches?e.touches[0].clientY:e.clientY;
-  const diff=y-startY;
-  activePanel.style.height=Math.max(120,startH+diff)+"px";
-}
-function stopResize(){
-  resizing=false;
-  activePanel=null;
-  document.body.style.overflow="auto";
+/* CREATE PANEL FROM TYPING */
+function createFromText(){
+  const input=document.getElementById("scene-text");
+  const text=input.value.trim();
+  if(!text)return;
+  addPanel({text});
+  input.value="";
   saveAll();
 }
 
-/* ------------ PANEL CREATION ------------ */
+/* PANEL CREATION */
 function newPanel(data={}){
   const panel=document.createElement("div");
   panel.className="panel";
-  panel.style.height=data.height||"200px";
-  panel.style.backgroundImage=data.bg?`url(${data.bg})`:"none";
+  panel.style.minHeight=data.height||"220px";
 
-  panel.innerHTML=`
-    <div class="tools">
-      <button onclick="uploadBG(this)">BG</button>
-      <button onclick="uploadChar(this)">CHR</button>
-      <button onclick="aiGen(this)">AI</button>
-    </div>
-    <div class="editor-box" contenteditable="true">${data.text||"New scene…"}</div>
-    <div class="resize-bar">⇕ resize</div>
-    <button class="delete-panel" onclick="deletePanel(this)">x</button>
+  const bg=document.createElement("div");
+  bg.className="bg-layer";
+  if(data.bg) bg.style.backgroundImage=`url(${data.bg})`;
+
+  const caption=document.createElement("div");
+  caption.className="caption";
+  caption.innerText=data.text||"Scene…";
+
+  const tools=document.createElement("div");
+  tools.className="tools";
+  tools.innerHTML=`
+    <button onclick="uploadBG(this)">BG</button>
+    <button onclick="uploadChar(this)">CHR</button>
   `;
+
+  const del=document.createElement("button");
+  del.className="delete-panel";
+  del.innerText="x";
+  del.onclick=()=>{ panel.remove(); saveAll(); };
+
+  const resize=document.createElement("div");
+  resize.className="resize-bar";
+  resize.innerText="⇕";
+
+  panel.appendChild(bg);
+  panel.appendChild(tools);
+  panel.appendChild(caption);
+  panel.appendChild(del);
+  panel.appendChild(resize);
 
   if(data.char){
     const img=document.createElement("img");
@@ -242,47 +261,36 @@ function newPanel(data={}){
   return panel;
 }
 
-/* ------------ ADD PANEL ------------ */
+/* ADD PANEL */
 function addPanel(data={}){
   const page=document.getElementById("page");
-  const btn=document.querySelector(".add-panel");
   const panel=newPanel(data);
-  page.insertBefore(panel,btn);
-  saveAll();
+  page.appendChild(panel);
 }
 
-/* DELETE */
-function deletePanel(btn){
-  btn.parentNode.remove();
-  saveAll();
-}
-
-/* BG Upload */
+/* BG UPLOAD */
 function uploadBG(btn){
   const panel=btn.closest(".panel");
-  const file=document.createElement("input");
-  file.type="file"; file.accept="image/*";
-  file.onchange=e=>{
+  const bg=panel.querySelector(".bg-layer");
+  const input=document.createElement("input");
+  input.type="file"; input.accept="image/*";
+  input.onchange=e=>{
     const f=e.target.files[0];
     if(!f)return;
     const reader=new FileReader();
-    reader.onload=ev=>{
-      panel.style.backgroundImage=`url(${ev.target.result})`;
-      saveAll();
-    };
+    reader.onload=ev=>{ bg.style.backgroundImage=`url(${ev.target.result})`; saveAll(); };
     reader.readAsDataURL(f);
   };
-  file.click();
+  input.click();
 }
 
-/* CHAR Upload */
+/* CHAR UPLOAD */
 function uploadChar(btn){
   const panel=btn.closest(".panel");
-  const file=document.createElement("input");
-  file.type="file"; file.accept="image/*";
-  file.onchange=e=>{
-    const f=e.target.files[0];
-    if(!f)return;
+  const input=document.createElement("input");
+  input.type="file"; input.accept="image/*";
+  input.onchange=e=>{
+    const f=e.target.files[0]; if(!f)return;
     const reader=new FileReader();
     reader.onload=ev=>{
       const img=document.createElement("img");
@@ -293,51 +301,34 @@ function uploadChar(btn){
     };
     reader.readAsDataURL(f);
   };
-  file.click();
+  input.click();
 }
 
-/* AI BUTTON (placeholder) */
-function aiGen(btn){
-  const panel=btn.closest(".panel");
-  panel.querySelector(".editor-box").innerText+="\n[AI generating…]";
-  saveAll();
-}
-
-/* SAVE */
+/* SAVE & LOAD */
 function saveAll(){
   const panels=[...document.querySelectorAll(".panel")].map(p=>{
     const char=p.querySelector(".char-img");
     return {
-      text:p.querySelector(".editor-box").innerText,
-      bg:p.style.backgroundImage.replace('url("','').replace('")','')||"",
+      text:p.querySelector(".caption").innerText,
+      bg:p.querySelector(".bg-layer").style.backgroundImage.replace('url("','').replace('")',''),
       char:char?char.src:"",
-      height:p.style.height
+      height:p.style.minHeight
     };
   });
   localStorage.setItem("manhwa",JSON.stringify(panels));
 }
-
-/* LOAD */
 function loadAll(){
   const saved=JSON.parse(localStorage.getItem("manhwa")||"[]");
-  if(saved.length){
-    saved.forEach(p=>addPanel(p));
-  } else {
-    addPanel({text:"Start your scene..."});
-  }
+  saved.length?saved.forEach(p=>addPanel(p)):null;
 }
 loadAll();
 
 /* CLEAR */
 function clearAll(){
   localStorage.removeItem("manhwa");
-  document.getElementById("page").innerHTML="";
-  document.getElementById("page").appendChild(document.querySelector(".add-panel"));
-  addPanel({text:"Start fresh..."});
+  location.reload();
 }
 </script>
-
-<button class="clear-all" onclick="clearAll()">Clear All</button>
 
 </body>
 </html>
