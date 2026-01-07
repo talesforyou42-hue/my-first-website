@@ -4,9 +4,8 @@
 <meta charset="UTF-8">
 <title>Manhwa Editor</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <style>
-*{box-sizing:border-box}
+*{box-sizing:border-box;touch-action:none}
 
 body{
   margin:0;
@@ -37,15 +36,30 @@ body{
 }
 
 .topbar{
-  text-align:center;
   color:white;
   font-weight:700;
-  padding:18px 0;
+  padding:16px;
   font-size:1.4rem;
   position:fixed;
   top:0;
   left:0;
   width:100%;
+  text-align:center;
+}
+
+/* UNDO button */
+.undo-btn{
+  position:fixed;
+  top:14px;
+  right:14px;
+  background:white;
+  color:#000;
+  border:none;
+  padding:6px 12px;
+  border-radius:6px;
+  font-size:0.9rem;
+  font-weight:700;
+  z-index:10;
 }
 
 /* PANEL */
@@ -57,7 +71,8 @@ body{
   margin-bottom:14px;
   position:relative;
   overflow:hidden;
-  background:#e6e6e6;
+  background:linear-gradient(135deg,#ffffff,#dcdcdc);
+  touch-action:none;
 }
 
 .bg-layer{
@@ -89,7 +104,6 @@ body{
   padding:8px 10px;
   font-size:0.95rem;
   z-index:3;
-  pointer-events:none;
 }
 
 .tools{
@@ -109,6 +123,12 @@ body{
   border-radius:4px;
 }
 
+/* DRAG */
+.panel.dragging{
+  opacity:0.6;
+}
+
+/* RESIZE */
 .resize-bar{
   position:absolute;
   bottom:-16px;
@@ -180,10 +200,10 @@ body{
 }
 </style>
 </head>
-
 <body>
 
 <div class="topbar">📜 Create Your Manhwa</div>
+<button class="undo-btn" onclick="undo()">Undo</button>
 
 <div class="page-wrapper">
   <div class="page" id="page">
@@ -197,20 +217,49 @@ body{
 </div>
 
 <script>
+let resizing=false, activePanel=null,startY=0,startH=0;
+let dragPanel=null, startPosY=0;
+let historyStack=[];
+
+/* SAVE HISTORY */
+function pushHistory(){
+  const state=localStorage.getItem("manhwa");
+  if(state){
+    historyStack.push(state);
+    if(historyStack.length>50)historyStack.shift();
+  }
+}
+
+/* UNDO */
+function undo(){
+  if(historyStack.length===0){
+    alert("Nothing to undo");
+    return;
+  }
+  const last=historyStack.pop();
+  localStorage.setItem("manhwa",last);
+  document.getElementById("page").innerHTML='<button class="add-panel" onclick="addPanel()">+ Add Scene</button>';
+  loadAll();
+}
+
+/* CREATE FROM TEXT */
 function createFromText(){
   const input=document.getElementById("scene-text");
   const text=input.value.trim();
   if(!text)return;
   addPanel({text});
   input.value="";
-  input.focus();
   saveAll();
 }
 
+/* PANEL BUILDER */
 function newPanel(data={}){
   const panel=document.createElement("div");
   panel.className="panel";
   panel.style.minHeight=data.height||"220px";
+
+  panel.addEventListener("mousedown",startDrag);
+  panel.addEventListener("touchstart",startDrag,{passive:false});
 
   const bg=document.createElement("div");
   bg.className="bg-layer";
@@ -230,11 +279,13 @@ function newPanel(data={}){
   const del=document.createElement("button");
   del.className="delete-panel";
   del.innerText="x";
-  del.onclick=()=>{ panel.remove(); saveAll(); };
+  del.onclick=()=>{panel.remove();saveAll();};
 
   const resize=document.createElement("div");
   resize.className="resize-bar";
   resize.innerText="⇕";
+  resize.addEventListener("mousedown",startResize);
+  resize.addEventListener("touchstart",startResize,{passive:false});
 
   panel.appendChild(bg);
   panel.appendChild(tools);
@@ -252,6 +303,7 @@ function newPanel(data={}){
   return panel;
 }
 
+/* ADD PANEL */
 function addPanel(data={}){
   const page=document.getElementById("page");
   const btn=document.querySelector(".add-panel");
@@ -260,27 +312,26 @@ function addPanel(data={}){
   saveAll();
 }
 
+/* BG Upload */
 function uploadBG(btn){
   const panel=btn.closest(".panel");
   const bg=panel.querySelector(".bg-layer");
   const input=document.createElement("input");
-  input.type="file"; input.accept="image/*";
+  input.type="file";input.accept="image/*";
   input.onchange=e=>{
-    const f=e.target.files[0];
-    if(!f)return;
     const reader=new FileReader();
-    reader.onload=ev=>{ bg.style.backgroundImage=`url(${ev.target.result})`; saveAll(); };
-    reader.readAsDataURL(f);
+    reader.onload=ev=>{bg.style.backgroundImage=`url(${ev.target.result})`;saveAll();};
+    reader.readAsDataURL(e.target.files[0]);
   };
   input.click();
 }
 
+/* Char Upload */
 function uploadChar(btn){
   const panel=btn.closest(".panel");
   const input=document.createElement("input");
-  input.type="file"; input.accept="image/*";
+  input.type="file";input.accept="image/*";
   input.onchange=e=>{
-    const f=e.target.files[0]; if(!f)return;
     const reader=new FileReader();
     reader.onload=ev=>{
       const img=document.createElement("img");
@@ -289,15 +340,17 @@ function uploadChar(btn){
       panel.appendChild(img);
       saveAll();
     };
-    reader.readAsDataURL(f);
+    reader.readAsDataURL(e.target.files[0]);
   };
   input.click();
 }
 
+/* SAVE PANELS */
 function saveAll(){
+  pushHistory();
   const panels=[...document.querySelectorAll(".panel")].map(p=>{
     const char=p.querySelector(".char-img");
-    return {
+    return{
       text:p.querySelector(".caption").innerText,
       bg:p.querySelector(".bg-layer").style.backgroundImage.replace('url("','').replace('")',''),
       char:char?char.src:"",
@@ -307,11 +360,74 @@ function saveAll(){
   localStorage.setItem("manhwa",JSON.stringify(panels));
 }
 
+/* LOAD PANELS */
 function loadAll(){
-  const saved=JSON.parse(localStorage.getItem("manhwa")||"[]");
-  saved.length?saved.forEach(p=>addPanel(p)):null;
+  JSON.parse(localStorage.getItem("manhwa")||"[]").forEach(p=>addPanel(p));
 }
 loadAll();
+
+/* --------- RESIZE --------- */
+function startResize(e){
+  e.preventDefault();
+  resizing=true;
+  activePanel=this.parentNode;
+  startY=e.touches?e.touches[0].clientY:e.clientY;
+  startH=activePanel.offsetHeight;
+}
+
+document.addEventListener("mousemove",e=>{
+  if(!resizing)return;
+  activePanel.style.minHeight=Math.max(160,startH+(e.clientY-startY))+"px";
+});
+
+document.addEventListener("touchmove",e=>{
+  if(!resizing)return;
+  activePanel.style.minHeight=Math.max(160,startH+(e.touches[0].clientY-startY))+"px";
+});
+
+document.addEventListener("mouseup",()=>{resizing=false;saveAll();});
+document.addEventListener("touchend",()=>{resizing=false;saveAll();});
+
+/* --------- DRAG REORDER --------- */
+function startDrag(e){
+  if(e.target.classList.contains("resize-bar"))return;
+  dragPanel=this;
+  dragPanel.classList.add("dragging");
+  startPosY=e.touches?e.touches[0].clientY:e.clientY;
+  document.addEventListener("mousemove",dragMove);
+  document.addEventListener("touchmove",dragMove,{passive:false});
+  document.addEventListener("mouseup",stopDrag);
+  document.addEventListener("touchend",stopDrag);
+}
+
+function dragMove(e){
+  const y=e.touches?e.touches[0].clientY:e.clientY;
+  const delta=y-startPosY;
+  dragPanel.style.transform=`translateY(${delta}px)`;
+
+  const panels=[...document.querySelectorAll(".panel")];
+  panels.forEach(p=>{
+    if(p!==dragPanel){
+      const rect=p.getBoundingClientRect();
+      if(y>rect.top && y<rect.bottom){
+        const page=document.getElementById("page");
+        page.insertBefore(dragPanel,p);
+        startPosY=y;
+      }
+    }
+  });
+}
+
+function stopDrag(){
+  dragPanel.style.transform="";
+  dragPanel.classList.remove("dragging");
+  dragPanel=null;
+  saveAll();
+  document.removeEventListener("mousemove",dragMove);
+  document.removeEventListener("touchmove",dragMove);
+  document.removeEventListener("mouseup",stopDrag);
+  document.removeEventListener("touchend",stopDrag);
+}
 </script>
 
 </body>
