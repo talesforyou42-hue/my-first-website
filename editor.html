@@ -20,20 +20,19 @@ body{
   overflow:hidden;
 }
 
-/* FULL FREE LAYOUT */
+/* FREE CANVAS */
 .canvas{
   position:relative;
   width:100%;
   height:100vh;
   overflow:auto;
-  padding:80px 0 100px;
+  padding:80px 0 140px;
 }
 
 /* TOP BAR */
 .topbar{
   position:fixed;
-  top:0;
-  left:0;
+  top:0;left:0;
   width:100%;
   padding:16px;
   text-align:center;
@@ -44,19 +43,18 @@ body{
   background:rgba(0,0,0,0.25);
 }
 
-/* PANEL (free movable box) */
+/* PANEL */
 .panel{
   position:absolute;
   top:120px;
   left:20px;
   width:300px;
   height:220px;
-  border:2px solid black;
+  border:2px solid #000;
   border-radius:10px;
   overflow:hidden;
-  background:#eeeeee;
+  background:#eee;
   z-index:10;
-  transition:border .15s;
 }
 .panel.dragging{opacity:.6;border-color:#ff5f6d}
 
@@ -69,7 +67,7 @@ body{
   z-index:1;
 }
 
-/* CHARACTER IMG */
+/* CHARACTER */
 .char-img{
   position:absolute;
   bottom:0;
@@ -79,7 +77,7 @@ body{
   z-index:2;
 }
 
-/* CAPTION TEXT */
+/* CAPTION */
 .caption{
   position:absolute;
   bottom:0;
@@ -89,10 +87,9 @@ body{
   padding:6px;
   font-size:.95rem;
   z-index:3;
-  pointer-events:none;
 }
 
-/* SPEECH BUBBLE */
+/* BUBBLE */
 .bubble{
   position:absolute;
   max-width:75%;
@@ -104,15 +101,8 @@ body{
   border:2px solid black;
 }
 
-/* TOOLS */
-.tools{
-  position:absolute;
-  top:6px;
-  left:6px;
-  display:flex;
-  gap:5px;
-  z-index:20;
-}
+/* BUTTONS */
+.tools{position:absolute;top:6px;left:6px;display:flex;gap:5px;z-index:20;}
 .tools button{
   padding:2px 6px;
   font-size:10px;
@@ -122,7 +112,16 @@ body{
   border-radius:3px;
 }
 
-/* DELETE */
+.history{position:absolute;bottom:46px;left:6px;display:flex;gap:5px;z-index:20;}
+.history button{
+  padding:2px 6px;
+  font-size:10px;
+  background:#444;
+  color:white;
+  border:none;
+  border-radius:4px;
+}
+
 .delete-panel{
   position:absolute;
   top:6px;
@@ -136,29 +135,11 @@ body{
   z-index:20;
 }
 
-/* UNDO/REDO */
-.history{
-  position:absolute;
-  bottom:46px;
-  left:6px;
-  display:flex;
-  gap:5px;
-  z-index:20;
-}
-.history button{
-  padding:2px 6px;
-  font-size:10px;
-  background:#444;
-  color:white;
-  border:none;
-  border-radius:4px;
-}
-
 /* 4 CORNER RESIZE */
 .resize{
   width:15px;height:15px;
-  position:absolute;
   background:#666;
+  position:absolute;
   z-index:30;
 }
 .resize.br{right:0;bottom:0;cursor:nwse-resize;}
@@ -166,7 +147,21 @@ body{
 .resize.tr{right:0;top:0;cursor:nesw-resize;}
 .resize.tl{left:0;top:0;cursor:nwse-resize;}
 
-/* INPUT BAR bottom */
+/* ADD SCENE BUTTON (BOTTOM LEFT) */
+.add-btn{
+  position:fixed;
+  bottom:75px;
+  left:15px;
+  padding:12px 20px;
+  border-radius:25px;
+  border:none;
+  background:#ff5f6d;
+  font-weight:700;
+  color:white;
+  z-index:1000;
+}
+
+/* INPUT BAR */
 .input-bar{
   position:fixed;
   bottom:0;
@@ -198,14 +193,14 @@ body{
 
 <body>
 
-<div class="topbar">
-  📜 Create Your Manhwa
+<div class="topbar">📜 Create Your Manhwa
   <button onclick="exportPNG()" style="margin-left:12px;padding:4px 10px;border:none;border-radius:6px;background:#fff;font-size:.8rem;">📥 Export PNG</button>
 </div>
 
 <div class="canvas" id="canvas"></div>
 
-<!-- INPUT BAR -->
+<button class="add-btn" onclick="addPanel()">+ Add Scene</button>
+
 <div class="input-bar">
   <input id="scene" placeholder="Write your scene...">
   <button onclick="addPanel()">Add</button>
@@ -216,46 +211,30 @@ body{
 <script>
 let undoStack=[],redoStack=[];
 
-/* SNAPSHOT */
-function snapshot(){
-  undoStack.push(document.getElementById("canvas").innerHTML);
-  if(undoStack.length>50)undoStack.shift();
-}
+function snapshot(){undoStack.push(canvas.innerHTML);if(undoStack.length>50)undoStack.shift();}
+function undo(){if(!undoStack.length)return;redoStack.push(canvas.innerHTML);canvas.innerHTML=undoStack.pop();restore();}
+function redo(){if(!redoStack.length)return;undoStack.push(canvas.innerHTML);canvas.innerHTML=redoStack.pop();restore();}
 
-/* UNDO / REDO */
-function undo(btn){
-  if(!undoStack.length)return;
-  redoStack.push(document.getElementById("canvas").innerHTML);
-  document.getElementById("canvas").innerHTML=undoStack.pop();
-  restoreEvents();
-}
-function redo(btn){
-  if(!redoStack.length)return;
-  undoStack.push(document.getElementById("canvas").innerHTML);
-  document.getElementById("canvas").innerHTML=redoStack.pop();
-  restoreEvents();
-}
-
-/* EXPORT */
 function exportPNG(){
-  const c=document.querySelector(".canvas");
-  html2canvas(c,{useCORS:true,scale:2}).then(canvas=>{
-    const link=document.createElement("a");
-    link.download="manhwa_page.png";
-    link.href=canvas.toDataURL();
-    link.click();
+  html2canvas(canvas,{useCORS:true,scale:2}).then(c=>{
+    let l=document.createElement("a");
+    l.download="manhwa.png";l.href=c.toDataURL();l.click();
   });
 }
 
-/* ADD PANEL */
 function addPanel(){
   snapshot();
   const txt=document.getElementById("scene").value.trim()||"New scene...";
+  const p=createPanel(txt);
+  canvas.appendChild(p);
+  document.getElementById("scene").value="";
+}
+
+function createPanel(text){
   const p=document.createElement("div");
   p.className="panel";
   p.style.left="20px";
   p.style.top=(100+Math.random()*200)+"px";
-
   p.innerHTML=`
     <div class="bg-layer"></div>
     <div class="tools">
@@ -267,22 +246,18 @@ function addPanel(){
       <button onclick="undo()">↶</button>
       <button onclick="redo()">↷</button>
     </div>
-    <button class="delete-panel" onclick="removeP(this)">x</button>
-    <div class="caption">${txt}</div>
-
+    <button class="delete-panel" onclick="del(this)">x</button>
+    <div class="caption">${text}</div>
     <div class="resize tl"></div>
     <div class="resize tr"></div>
     <div class="resize bl"></div>
     <div class="resize br"></div>
   `;
-
   enableDrag(p);
   enableResize(p);
-  document.getElementById("canvas").appendChild(p);
-  document.getElementById("scene").value="";
+  return p;
 }
 
-/* BG UPLOAD */
 function bg(btn){
   const p=btn.closest(".panel");
   const bg=p.querySelector(".bg-layer");
@@ -297,7 +272,6 @@ function bg(btn){
   f.click();
 }
 
-/* CHARACTER */
 function addChar(btn){
   const p=btn.closest(".panel");
   const f=document.createElement("input");
@@ -312,7 +286,6 @@ function addChar(btn){
   f.click();
 }
 
-/* ADD SPEECH BUBBLE */
 function addBubble(btn){
   snapshot();
   const p=btn.closest(".panel");
@@ -326,13 +299,8 @@ function addBubble(btn){
   p.appendChild(b);
 }
 
-/* DELETE PANEL */
-function removeP(btn){
-  snapshot();
-  btn.closest(".panel").remove();
-}
+function del(btn){snapshot();btn.closest(".panel").remove();}
 
-/* DRAG ANY ELEMENT */
 function enableDrag(el){
   let sx,sy,ox,oy;
   el.onmousedown=e=>{
@@ -347,7 +315,6 @@ function enableDrag(el){
   };
 }
 
-/* 4-corner RESIZE */
 function enableResize(p){
   let sx,sy,sw,sh,sl,st;
   p.querySelectorAll(".resize").forEach(h=>{
@@ -357,7 +324,7 @@ function enableResize(p){
       sw=p.offsetWidth; sh=p.offsetHeight;
       sl=p.offsetLeft; st=p.offsetTop;
       document.onmousemove=ev=>{
-        const dx=ev.clientX-sx, dy=ev.clientY-sy;
+        const dx=ev.clientX-sx,dy=ev.clientY-sy;
         if(h.classList.contains("br")){p.style.width=(sw+dx)+"px";p.style.height=(sh+dy)+"px";}
         if(h.classList.contains("bl")){p.style.width=(sw-dx)+"px";p.style.left=(sl+dx)+"px";p.style.height=(sh+dy)+"px";}
         if(h.classList.contains("tr")){p.style.width=(sw+dx)+"px";p.style.height=(sh-dy)+"px";p.style.top=(st+dy)+"px";}
@@ -368,13 +335,8 @@ function enableResize(p){
   });
 }
 
-/* Restore events after undo/redo */
-function restoreEvents(){
-  document.querySelectorAll(".panel").forEach(p=>{
-    enableDrag(p);
-    enableResize(p);
-  });
-}
+function restore(){document.querySelectorAll(".panel").forEach(p=>{enableDrag(p);enableResize(p);});}
+
 </script>
 
 </body>
