@@ -97,6 +97,24 @@ body{
   z-index:4;
 }
 
+/* UNDO/REDO FIX — MOVE ABOVE CAPTION */
+.history{
+  position:absolute;
+  bottom:70px;        /* ⬅ moved higher */
+  left:6px;
+  display:flex;
+  gap:5px;
+  z-index:7;
+}
+.history button{
+  padding:2px 6px;
+  font-size:10px;
+  background:#444;
+  color:white;
+  border:none;
+  border-radius:4px;
+}
+
 /* TOOLS */
 .tools{
   position:absolute;
@@ -115,24 +133,6 @@ body{
   border:none;
 }
 
-/* HISTORY ABOVE CAPTION */
-.history{
-  position:absolute;
-  bottom:52px;
-  left:6px;
-  display:flex;
-  gap:5px;
-  z-index:7;
-}
-.history button{
-  padding:2px 6px;
-  font-size:10px;
-  background:#444;
-  color:white;
-  border:none;
-  border-radius:4px;
-}
-
 /* DELETE */
 .delete-panel{
   position:absolute;
@@ -147,7 +147,7 @@ body{
   z-index:7;
 }
 
-/* FULL RESIZE HANDLE */
+/* WIDTH + HEIGHT RESIZE HANDLE — FIX */
 .resize-handle{
   position:absolute;
   bottom:0;
@@ -364,23 +364,25 @@ function reload(){
 }
 reload();
 
-/* ENABLE RESIZE */
+/* ENABLE RESIZE WIDTH + HEIGHT */
 function enableResize(panel){
-  let startY,startH;
+  let sx,sy,sw,sh;
   const h=panel.querySelector(".resize-handle");
 
   const start=e=>{
     e.preventDefault();
-    startY=e.touches?e.touches[0].clientY:e.clientY;
-    startH=panel.offsetHeight;
+    sx=e.clientX; sy=e.clientY;
+    sw=panel.offsetWidth; sh=panel.offsetHeight;
     document.addEventListener("mousemove",move);
     document.addEventListener("touchmove",move,{passive:false});
     document.addEventListener("mouseup",stop);
     document.addEventListener("touchend",stop);
   };
   const move=e=>{
+    const x=e.touches?e.touches[0].clientX:e.clientX;
     const y=e.touches?e.touches[0].clientY:e.clientY;
-    panel.style.minHeight=Math.max(160,startH+(y-startY))+"px";
+    panel.style.width=Math.max(200,sw+(x-sx))+"px";
+    panel.style.minHeight=Math.max(160,sh+(y-sy))+"px";
   };
   const stop=()=>{
     document.removeEventListener("mousemove",move);
@@ -394,10 +396,11 @@ function enableResize(panel){
 
 /* ENABLE DRAG */
 function enableDrag(panel){
-  let startY;
+  let startY,startX;
   const start=e=>{
     if(e.target.classList.contains("resize-handle"))return;
     panel.classList.add("dragging");
+    startX=e.touches?e.touches[0].clientX:e.clientX;
     startY=e.touches?e.touches[0].clientY:e.clientY;
     document.addEventListener("mousemove",move);
     document.addEventListener("touchmove",move,{passive:false});
@@ -405,23 +408,13 @@ function enableDrag(panel){
     document.addEventListener("touchend",stop);
   };
   const move=e=>{
+    const x=e.touches?e.touches[0].clientX:e.clientX;
     const y=e.touches?e.touches[0].clientY:e.clientY;
-    const delta=y-startY;
-    panel.style.transform=`translateY(${delta}px)`;
-    const all=[...document.querySelectorAll(".panel")];
-    all.forEach(p=>{
-      if(p!==panel){
-        const r=p.getBoundingClientRect();
-        if(y>r.top&&y<r.bottom){
-          const pg=document.getElementById("page");
-          pg.insertBefore(panel,p);
-          startY=y;
-        }
-      }
-    });
+    panel.style.left=(panel.offsetLeft+(x-startX))+"px";
+    panel.style.top=(panel.offsetTop+(y-startY))+"px";
+    startX=x;startY=y;
   };
   const stop=()=>{
-    panel.style.transform="";
     panel.classList.remove("dragging");
     saveAll();
     document.removeEventListener("mousemove",move);
