@@ -2,8 +2,9 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Manhwa Editor</title>
+<title>Manhwa Free Canvas Editor</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <style>
 *{box-sizing:border-box;touch-action:none}
 
@@ -16,50 +17,50 @@ body{
     radial-gradient(circle at 90% 30%, #fad0c4, transparent 40%),
     radial-gradient(circle at 50% 80%, #fbc2eb, transparent 45%),
     linear-gradient(135deg,#a18cd1,#fbc2eb);
-  overflow-x:hidden;
+  overflow:hidden;
 }
 
-.page-wrapper{
-  display:flex;
-  justify-content:center;
-  padding:90px 20px 90px;
+/* FULL FREE LAYOUT */
+.canvas{
+  position:relative;
   width:100%;
+  height:100vh;
+  overflow:auto;
+  padding:80px 0 100px;
 }
 
-.page{
-  background:white;
-  width:380px;
-  min-height:85vh;
-  border-radius:18px;
-  padding:14px;
-  box-shadow:0 30px 60px rgba(0,0,0,0.25);
-}
-
+/* TOP BAR */
 .topbar{
-  color:white;
-  font-weight:700;
-  padding:16px;
-  font-size:1.4rem;
   position:fixed;
   top:0;
   left:0;
   width:100%;
+  padding:16px;
   text-align:center;
+  color:white;
+  font-size:1.4rem;
+  font-weight:700;
+  z-index:1000;
+  background:rgba(0,0,0,0.25);
 }
 
-/* PANEL */
+/* PANEL (free movable box) */
 .panel{
-  width:100%;
-  min-height:220px;
-  border:2px solid #222;
-  border-radius:6px;
-  margin-bottom:14px;
-  position:relative;
+  position:absolute;
+  top:120px;
+  left:20px;
+  width:300px;
+  height:220px;
+  border:2px solid black;
+  border-radius:10px;
   overflow:hidden;
-  background:linear-gradient(135deg,#ffffff,#dcdcdc);
-  touch-action:none;
+  background:#eeeeee;
+  z-index:10;
+  transition:border .15s;
 }
+.panel.dragging{opacity:.6;border-color:#ff5f6d}
 
+/* BG */
 .bg-layer{
   position:absolute;
   inset:0;
@@ -68,6 +69,7 @@ body{
   z-index:1;
 }
 
+/* CHARACTER IMG */
 .char-img{
   position:absolute;
   bottom:0;
@@ -77,47 +79,73 @@ body{
   z-index:2;
 }
 
-/* Caption */
+/* CAPTION TEXT */
 .caption{
   position:absolute;
   bottom:0;
-  left:0;
   width:100%;
   background:rgba(0,0,0,0.65);
   color:white;
-  padding:8px 10px;
-  font-size:0.95rem;
+  padding:6px;
+  font-size:.95rem;
   z-index:3;
+  pointer-events:none;
 }
 
-/* Tools */
+/* SPEECH BUBBLE */
+.bubble{
+  position:absolute;
+  max-width:75%;
+  background:white;
+  padding:6px;
+  border-radius:10px;
+  font-size:.85rem;
+  z-index:15;
+  border:2px solid black;
+}
+
+/* TOOLS */
 .tools{
   position:absolute;
-  left:6px;
   top:6px;
-  z-index:5;
+  left:6px;
   display:flex;
-  gap:4px;
+  gap:5px;
+  z-index:20;
 }
 .tools button{
   padding:2px 6px;
   font-size:10px;
-  background:#111;
+  background:#222;
   color:white;
   border:none;
-  border-radius:4px;
+  border-radius:3px;
 }
 
-/* Per panel Undo/Redo */
-.history-controls{
+/* DELETE */
+.delete-panel{
   position:absolute;
-  bottom:26px;
-  left:4px;
-  display:flex;
-  gap:4px;
-  z-index:8;
+  top:6px;
+  right:6px;
+  background:red;
+  color:white;
+  border:none;
+  font-size:11px;
+  padding:3px 6px;
+  border-radius:4px;
+  z-index:20;
 }
-.history-controls button{
+
+/* UNDO/REDO */
+.history{
+  position:absolute;
+  bottom:46px;
+  left:6px;
+  display:flex;
+  gap:5px;
+  z-index:20;
+}
+.history button{
   padding:2px 6px;
   font-size:10px;
   background:#444;
@@ -126,329 +154,228 @@ body{
   border-radius:4px;
 }
 
-/* Delete */
-.delete-panel{
+/* 4 CORNER RESIZE */
+.resize{
+  width:15px;height:15px;
   position:absolute;
-  right:6px;
-  top:6px;
-  background:red;
-  color:white;
-  border:none;
-  padding:3px 6px;
-  font-size:11px;
-  border-radius:4px;
-  z-index:7;
+  background:#666;
+  z-index:30;
 }
+.resize.br{right:0;bottom:0;cursor:nwse-resize;}
+.resize.bl{left:0;bottom:0;cursor:nesw-resize;}
+.resize.tr{right:0;top:0;cursor:nesw-resize;}
+.resize.tl{left:0;top:0;cursor:nwse-resize;}
 
-/* Resize both ways */
-.resize-bar{
-  position:absolute;
-  bottom:0;
-  right:0;
-  width:18px;
-  height:18px;
-  background:#bbb;
-  cursor:nwse-resize;
-  z-index:10;
-}
-
-/* Drag appearance */
-.panel.dragging{
-  opacity:0.6;
-}
-
-/* Add button */
-.add-panel{
-  width:100%;
-  padding:12px;
-  border:none;
-  border-radius:24px;
-  background:#ff5f6d;
-  color:white;
-  font-weight:700;
-  font-size:1rem;
-  margin-top:10px;
-}
-
-/* Input bar */
+/* INPUT BAR bottom */
 .input-bar{
   position:fixed;
   bottom:0;
   left:0;
   width:100%;
-  background:white;
-  border-top:2px solid #ccc;
   padding:10px;
+  background:#fff;
+  border-top:2px solid #ccc;
   display:flex;
   gap:8px;
 }
 .input-bar input{
   flex:1;
   padding:12px;
-  border:1px solid #bbb;
   border-radius:25px;
+  border:1px solid #ccc;
   outline:none;
-  font-size:1rem;
 }
 .input-bar button{
   padding:12px 20px;
-  border:none;
   border-radius:25px;
+  border:none;
   background:#ff5f6d;
-  color:white;
   font-weight:700;
-  font-size:1rem;
+  color:white;
 }
 </style>
 </head>
 
 <body>
 
-<div class="topbar">📜 Create Your Manhwa</div>
-
-<div class="page-wrapper">
-  <div class="page" id="page">
-    <button class="add-panel" onclick="addPanel()">+ Add Scene</button>
-  </div>
+<div class="topbar">
+  📜 Create Your Manhwa
+  <button onclick="exportPNG()" style="margin-left:12px;padding:4px 10px;border:none;border-radius:6px;background:#fff;font-size:.8rem;">📥 Export PNG</button>
 </div>
 
+<div class="canvas" id="canvas"></div>
+
+<!-- INPUT BAR -->
 <div class="input-bar">
-  <input id="scene-text" type="text" placeholder="Write your scene...">
-  <button onclick="createFromText()">Create</button>
+  <input id="scene" placeholder="Write your scene...">
+  <button onclick="addPanel()">Add</button>
 </div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
 <script>
-let resizing=false, resizePanel=null,startX=0,startY=0,startW=0,startH=0;
-let dragPanel=null, startPosY=0;
-let history=[];
-let redoStack=[];
+let undoStack=[],redoStack=[];
 
-/* PUSH HISTORY */
-function pushHistory(){
-  const state=localStorage.getItem("manhwa");
-  if(state){
-    history.push(state);
-    redoStack=[];
-    if(history.length>60)history.shift();
-  }
+/* SNAPSHOT */
+function snapshot(){
+  undoStack.push(document.getElementById("canvas").innerHTML);
+  if(undoStack.length>50)undoStack.shift();
 }
 
-/* PER PANEL UNDO */
+/* UNDO / REDO */
 function undo(btn){
-  if(history.length===0)return;
-  redoStack.push(localStorage.getItem("manhwa"));
-  const last=history.pop();
-  localStorage.setItem("manhwa",last);
-  reload();
+  if(!undoStack.length)return;
+  redoStack.push(document.getElementById("canvas").innerHTML);
+  document.getElementById("canvas").innerHTML=undoStack.pop();
+  restoreEvents();
 }
-
-/* PER PANEL REDO */
 function redo(btn){
-  if(redoStack.length===0)return;
-  history.push(localStorage.getItem("manhwa"));
-  const next=redoStack.pop();
-  localStorage.setItem("manhwa",next);
-  reload();
+  if(!redoStack.length)return;
+  undoStack.push(document.getElementById("canvas").innerHTML);
+  document.getElementById("canvas").innerHTML=redoStack.pop();
+  restoreEvents();
 }
 
-/* BUILD NEW PANEL */
-function newPanel(data={}){
-  const panel=document.createElement("div");
-  panel.className="panel";
-  panel.style.minHeight=data.height||"220px";
-
-  panel.addEventListener("mousedown",startDrag);
-  panel.addEventListener("touchstart",startDrag,{passive:false});
-
-  const bg=document.createElement("div");
-  bg.className="bg-layer";
-  if(data.bg) bg.style.backgroundImage=`url(${data.bg})`;
-
-  const caption=document.createElement("div");
-  caption.className="caption";
-  caption.innerText=data.text||"New scene…";
-
-  const tools=document.createElement("div");
-  tools.className="tools";
-  tools.innerHTML=`<button onclick="uploadBG(this)">BG</button>
-                   <button onclick="uploadChar(this)">CHR</button>`;
-
-  const controls=document.createElement("div");
-  controls.className="history-controls";
-  controls.innerHTML=`<button onclick="undo()">↶</button>
-                      <button onclick="redo()">↷</button>`;
-
-  const del=document.createElement("button");
-  del.className="delete-panel";
-  del.innerText="x";
-  del.onclick=()=>{panel.remove();saveAll();};
-
-  const resize=document.createElement("div");
-  resize.className="resize-bar";
-  resize.addEventListener("mousedown",startResize);
-  resize.addEventListener("touchstart",startResize,{passive:false});
-
-  panel.appendChild(bg);
-  panel.appendChild(tools);
-  panel.appendChild(controls);
-  panel.appendChild(caption);
-  panel.appendChild(del);
-  panel.appendChild(resize);
-
-  if(data.char){
-    const img=document.createElement("img");
-    img.src=data.char;
-    img.className="char-img";
-    panel.appendChild(img);
-  }
-
-  return panel;
+/* EXPORT */
+function exportPNG(){
+  const c=document.querySelector(".canvas");
+  html2canvas(c,{useCORS:true,scale:2}).then(canvas=>{
+    const link=document.createElement("a");
+    link.download="manhwa_page.png";
+    link.href=canvas.toDataURL();
+    link.click();
+  });
 }
 
 /* ADD PANEL */
-function addPanel(data={}){
-  const page=document.getElementById("page");
-  const btn=document.querySelector(".add-panel");
-  const panel=newPanel(data);
-  page.insertBefore(panel,btn);
-  saveAll();
-}
+function addPanel(){
+  snapshot();
+  const txt=document.getElementById("scene").value.trim()||"New scene...";
+  const p=document.createElement("div");
+  p.className="panel";
+  p.style.left="20px";
+  p.style.top=(100+Math.random()*200)+"px";
 
-/* INPUT CREATE */
-function createFromText(){
-  const input=document.getElementById("scene-text");
-  const text=input.value.trim();
-  if(!text)return;
-  addPanel({text});
-  input.value="";
-  saveAll();
+  p.innerHTML=`
+    <div class="bg-layer"></div>
+    <div class="tools">
+      <button onclick="bg(this)">BG</button>
+      <button onclick="addChar(this)">CHR</button>
+      <button onclick="addBubble(this)">TXT</button>
+    </div>
+    <div class="history">
+      <button onclick="undo()">↶</button>
+      <button onclick="redo()">↷</button>
+    </div>
+    <button class="delete-panel" onclick="removeP(this)">x</button>
+    <div class="caption">${txt}</div>
+
+    <div class="resize tl"></div>
+    <div class="resize tr"></div>
+    <div class="resize bl"></div>
+    <div class="resize br"></div>
+  `;
+
+  enableDrag(p);
+  enableResize(p);
+  document.getElementById("canvas").appendChild(p);
+  document.getElementById("scene").value="";
 }
 
 /* BG UPLOAD */
-function uploadBG(btn){
-  const panel=btn.closest(".panel");
-  const bg=panel.querySelector(".bg-layer");
-  const input=document.createElement("input");
-  input.type="file";input.accept="image/*";
-  input.onchange=e=>{
-    pushHistory();
-    const reader=new FileReader();
-    reader.onload=ev=>{bg.style.backgroundImage=`url(${ev.target.result})`;saveAll();};
-    reader.readAsDataURL(e.target.files[0]);
+function bg(btn){
+  const p=btn.closest(".panel");
+  const bg=p.querySelector(".bg-layer");
+  const f=document.createElement("input");
+  f.type="file";f.accept="image/*";
+  f.onchange=e=>{
+    snapshot();
+    const r=new FileReader();
+    r.onload=x=>bg.style.backgroundImage=`url(${x.target.result})`;
+    r.readAsDataURL(e.target.files[0]);
   };
-  input.click();
+  f.click();
 }
 
-/* CHAR UPLOAD */
-function uploadChar(btn){
-  const panel=btn.closest(".panel");
-  const input=document.createElement("input");
-  input.type="file";input.accept="image/*";
-  input.onchange=e=>{
-    pushHistory();
-    const reader=new FileReader();
-    reader.onload=ev=>{
-      const img=document.createElement("img");
-      img.src=ev.target.result;
-      img.className="char-img";
-      panel.appendChild(img);
-      saveAll();
-    };
-    reader.readAsDataURL(e.target.files[0]);
+/* CHARACTER */
+function addChar(btn){
+  const p=btn.closest(".panel");
+  const f=document.createElement("input");
+  f.type="file";f.accept="image/*";
+  f.onchange=e=>{
+    snapshot();
+    const img=document.createElement("img");
+    img.src=URL.createObjectURL(e.target.files[0]);
+    img.className="char-img";
+    p.appendChild(img);
   };
-  input.click();
+  f.click();
 }
 
-/* SAVE */
-function saveAll(){
-  pushHistory();
-  const data=[...document.querySelectorAll(".panel")].map(p=>{
-    const char=p.querySelector(".char-img");
-    return{
-      text:p.querySelector(".caption").innerText,
-      bg:p.querySelector(".bg-layer").style.backgroundImage.replace('url("','').replace('")',''),
-      char:char?char.src:"",
-      height:p.style.minHeight,
+/* ADD SPEECH BUBBLE */
+function addBubble(btn){
+  snapshot();
+  const p=btn.closest(".panel");
+  const b=document.createElement("div");
+  b.className="bubble";
+  b.contentEditable=true;
+  b.innerText="Say something...";
+  b.style.left="20px";
+  b.style.top="20px";
+  enableDrag(b);
+  p.appendChild(b);
+}
+
+/* DELETE PANEL */
+function removeP(btn){
+  snapshot();
+  btn.closest(".panel").remove();
+}
+
+/* DRAG ANY ELEMENT */
+function enableDrag(el){
+  let sx,sy,ox,oy;
+  el.onmousedown=e=>{
+    if(e.target.classList.contains("resize"))return;
+    sx=e.clientX; sy=e.clientY;
+    ox=el.offsetLeft; oy=el.offsetTop;
+    document.onmousemove=ev=>{
+      el.style.left=(ox+(ev.clientX-sx))+"px";
+      el.style.top=(oy+(ev.clientY-sy))+"px";
     };
-  });
-  localStorage.setItem("manhwa",JSON.stringify(data));
+    document.onmouseup=()=>{document.onmousemove=null;}
+  };
 }
 
-/* LOAD */
-function reload(){
-  document.getElementById("page").innerHTML='<button class="add-panel" onclick="addPanel()">+ Add Scene</button>';
-  JSON.parse(localStorage.getItem("manhwa")||"[]").forEach(p=>addPanel(p));
-}
-reload();
-
-/* RESIZE BOTH DIRECTIONS */
-function startResize(e){
-  e.preventDefault();
-  resizePanel=this.parentNode;
-  resizing=true;
-  startX=e.touches?e.touches[0].clientX:e.clientX;
-  startY=e.touches?e.touches[0].clientY:e.clientY;
-  startW=resizePanel.offsetWidth;
-  startH=resizePanel.offsetHeight;
-}
-
-document.addEventListener("mousemove",e=>{
-  if(!resizing)return;
-  const dx=e.clientX-startX;
-  const dy=e.clientY-startY;
-  resizePanel.style.minHeight=Math.max(160,startH+dy)+"px";
-});
-
-document.addEventListener("touchmove",e=>{
-  if(!resizing)return;
-  const dx=e.touches[0].clientX-startX;
-  const dy=e.touches[0].clientY-startY;
-  resizePanel.style.minHeight=Math.max(160,startH+dy)+"px";
-});
-
-document.addEventListener("mouseup",()=>{resizing=false;saveAll();});
-document.addEventListener("touchend",()=>{resizing=false;saveAll();});
-
-/* DRAG REORDER */
-function startDrag(e){
-  if(e.target.classList.contains("resize-bar"))return;
-  dragPanel=this;
-  dragPanel.classList.add("dragging");
-  startPosY=e.touches?e.touches[0].clientY:e.clientY;
-  document.addEventListener("mousemove",dragMove);
-  document.addEventListener("touchmove",dragMove,{passive:false});
-  document.addEventListener("mouseup",stopDrag);
-  document.addEventListener("touchend",stopDrag);
-}
-
-function dragMove(e){
-  const y=e.touches?e.touches[0].clientY:e.clientY;
-  const delta=y-startPosY;
-  dragPanel.style.transform=`translateY(${delta}px)`;
-
-  const panels=[...document.querySelectorAll(".panel")];
-  panels.forEach(p=>{
-    if(p!==dragPanel){
-      const rect=p.getBoundingClientRect();
-      if(y>rect.top && y<rect.bottom){
-        const page=document.getElementById("page");
-        page.insertBefore(dragPanel,p);
-        startPosY=y;
-      }
-    }
+/* 4-corner RESIZE */
+function enableResize(p){
+  let sx,sy,sw,sh,sl,st;
+  p.querySelectorAll(".resize").forEach(h=>{
+    h.onmousedown=e=>{
+      e.preventDefault();
+      sx=e.clientX; sy=e.clientY;
+      sw=p.offsetWidth; sh=p.offsetHeight;
+      sl=p.offsetLeft; st=p.offsetTop;
+      document.onmousemove=ev=>{
+        const dx=ev.clientX-sx, dy=ev.clientY-sy;
+        if(h.classList.contains("br")){p.style.width=(sw+dx)+"px";p.style.height=(sh+dy)+"px";}
+        if(h.classList.contains("bl")){p.style.width=(sw-dx)+"px";p.style.left=(sl+dx)+"px";p.style.height=(sh+dy)+"px";}
+        if(h.classList.contains("tr")){p.style.width=(sw+dx)+"px";p.style.height=(sh-dy)+"px";p.style.top=(st+dy)+"px";}
+        if(h.classList.contains("tl")){p.style.width=(sw-dx)+"px";p.style.left=(sl+dx)+"px";p.style.height=(sh-dy)+"px";p.style.top=(st+dy)+"px";}
+      };
+      document.onmouseup=()=>{document.onmousemove=null;}
+    };
   });
 }
 
-function stopDrag(){
-  dragPanel.style.transform="";
-  dragPanel.classList.remove("dragging");
-  dragPanel=null;
-  saveAll();
-  document.removeEventListener("mousemove",dragMove);
-  document.removeEventListener("touchmove",dragMove);
-  document.removeEventListener("mouseup",stopDrag);
-  document.removeEventListener("touchend",stopDrag);
+/* Restore events after undo/redo */
+function restoreEvents(){
+  document.querySelectorAll(".panel").forEach(p=>{
+    enableDrag(p);
+    enableResize(p);
+  });
 }
 </script>
+
 </body>
 </html>
