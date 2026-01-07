@@ -20,19 +20,18 @@ body{
   overflow:hidden;
 }
 
-/* FREE CANVAS */
 .canvas{
   position:relative;
   width:100%;
   height:100vh;
   overflow:auto;
-  padding:80px 0 140px;
+  padding:80px 0 90px;
 }
 
-/* TOP BAR */
 .topbar{
   position:fixed;
-  top:0;left:0;
+  top:0;
+  left:0;
   width:100%;
   padding:16px;
   text-align:center;
@@ -40,25 +39,22 @@ body{
   font-size:1.4rem;
   font-weight:700;
   z-index:1000;
-  background:rgba(0,0,0,0.25);
 }
 
-/* PANEL */
 .panel{
   position:absolute;
   top:120px;
   left:20px;
   width:300px;
-  height:220px;
+  height:200px;
   border:2px solid #000;
   border-radius:10px;
   overflow:hidden;
   background:#eee;
   z-index:10;
+  user-select:none;
 }
-.panel.dragging{opacity:.6;border-color:#ff5f6d}
 
-/* BG */
 .bg-layer{
   position:absolute;
   inset:0;
@@ -67,7 +63,6 @@ body{
   z-index:1;
 }
 
-/* CHARACTER */
 .char-img{
   position:absolute;
   bottom:0;
@@ -77,42 +72,42 @@ body{
   z-index:2;
 }
 
-/* CAPTION */
 .caption{
   position:absolute;
   bottom:0;
   width:100%;
-  background:rgba(0,0,0,0.65);
+  background:rgba(0,0,0,0.7);
   color:white;
   padding:6px;
-  font-size:.95rem;
   z-index:3;
+  font-size:0.95rem;
 }
 
-/* BUBBLE */
-.bubble{
+.tools{
   position:absolute;
-  max-width:75%;
-  background:white;
-  padding:6px;
-  border-radius:10px;
-  font-size:.85rem;
-  z-index:15;
-  border:2px solid black;
+  top:6px;
+  left:6px;
+  display:flex;
+  gap:5px;
+  z-index:6;
 }
-
-/* BUTTONS */
-.tools{position:absolute;top:6px;left:6px;display:flex;gap:5px;z-index:20;}
 .tools button{
   padding:2px 6px;
   font-size:10px;
   background:#222;
   color:white;
   border:none;
-  border-radius:3px;
+  border-radius:4px;
 }
 
-.history{position:absolute;bottom:46px;left:6px;display:flex;gap:5px;z-index:20;}
+.history{
+  position:absolute;
+  bottom:46px;
+  left:6px;
+  display:flex;
+  gap:6px;
+  z-index:6;
+}
 .history button{
   padding:2px 6px;
   font-size:10px;
@@ -132,122 +127,88 @@ body{
   font-size:11px;
   padding:3px 6px;
   border-radius:4px;
-  z-index:20;
+  z-index:6;
 }
 
-/* 4 CORNER RESIZE */
 .resize{
-  width:15px;height:15px;
+  width:14px;
+  height:14px;
   background:#666;
   position:absolute;
-  z-index:30;
+  z-index:20;
+  border-radius:2px;
 }
-.resize.br{right:0;bottom:0;cursor:nwse-resize;}
-.resize.bl{left:0;bottom:0;cursor:nesw-resize;}
-.resize.tr{right:0;top:0;cursor:nesw-resize;}
-.resize.tl{left:0;top:0;cursor:nwse-resize;}
+.resize.br{bottom:0;right:0;cursor:nwse-resize;}
+.resize.bl{bottom:0;left:0;cursor:nesw-resize;}
+.resize.tr{top:0;right:0;cursor:nesw-resize;}
+.resize.tl{top:0;left:0;cursor:nwse-resize;}
 
-/* ADD SCENE BUTTON (BOTTOM LEFT) */
-.add-btn{
-  position:fixed;
-  bottom:75px;
-  left:15px;
-  padding:12px 20px;
-  border-radius:25px;
-  border:none;
-  background:#ff5f6d;
-  font-weight:700;
-  color:white;
-  z-index:1000;
-}
-
-/* INPUT BAR */
-.input-bar{
-  position:fixed;
-  bottom:0;
-  left:0;
-  width:100%;
-  padding:10px;
-  background:#fff;
-  border-top:2px solid #ccc;
-  display:flex;
-  gap:8px;
-}
-.input-bar input{
-  flex:1;
-  padding:12px;
-  border-radius:25px;
-  border:1px solid #ccc;
-  outline:none;
-}
-.input-bar button{
-  padding:12px 20px;
-  border-radius:25px;
-  border:none;
-  background:#ff5f6d;
-  font-weight:700;
-  color:white;
-}
 </style>
 </head>
 
 <body>
 
-<div class="topbar">📜 Create Your Manhwa
-  <button onclick="exportPNG()" style="margin-left:12px;padding:4px 10px;border:none;border-radius:6px;background:#fff;font-size:.8rem;">📥 Export PNG</button>
-</div>
+<div class="topbar">📜 Create Your Manhwa</div>
 
 <div class="canvas" id="canvas"></div>
 
-<button class="add-btn" onclick="addPanel()">+ Add Scene</button>
-
-<div class="input-bar">
-  <input id="scene" placeholder="Write your scene...">
-  <button onclick="addPanel()">Add</button>
+<!-- INPUT BAR -->
+<div style="position:fixed;bottom:0;left:0;width:100%;
+ background:white;border-top:2px solid #ccc;
+ padding:10px;display:flex;gap:8px;">
+  <input id="scene" placeholder="Write your scene..."
+   style="flex:1;padding:12px;border-radius:25px;border:1px solid #ccc;">
+  <button onclick="addPanel()" style="
+    padding:12px 20px;background:#ff5f6d;
+    border-radius:25px;border:none;font-weight:700;color:white;">
+    Add Scene
+  </button>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-
 <script>
-let undoStack=[],redoStack=[];
+let history=[], redoStack=[];
 
-function snapshot(){undoStack.push(canvas.innerHTML);if(undoStack.length>50)undoStack.shift();}
-function undo(){if(!undoStack.length)return;redoStack.push(canvas.innerHTML);canvas.innerHTML=undoStack.pop();restore();}
-function redo(){if(!redoStack.length)return;undoStack.push(canvas.innerHTML);canvas.innerHTML=redoStack.pop();restore();}
+function snapshot(){
+  history.push(document.getElementById("canvas").innerHTML);
+  redoStack=[];
+}
 
-function exportPNG(){
-  html2canvas(canvas,{useCORS:true,scale:2}).then(c=>{
-    let l=document.createElement("a");
-    l.download="manhwa.png";l.href=c.toDataURL();l.click();
-  });
+function undoPanel(){
+  if(!history.length) return;
+  redoStack.push(document.getElementById("canvas").innerHTML);
+  document.getElementById("canvas").innerHTML = history.pop();
+  restoreEvents();
+}
+
+function redoPanel(){
+  if(!redoStack.length) return;
+  history.push(document.getElementById("canvas").innerHTML);
+  document.getElementById("canvas").innerHTML = redoStack.pop();
+  restoreEvents();
 }
 
 function addPanel(){
   snapshot();
-  const txt=document.getElementById("scene").value.trim()||"New scene...";
-  const p=createPanel(txt);
-  canvas.appendChild(p);
-  document.getElementById("scene").value="";
-}
+  const txt=document.getElementById("scene").value.trim() || "New scene...";
+  const c=document.getElementById("canvas");
 
-function createPanel(text){
   const p=document.createElement("div");
   p.className="panel";
   p.style.left="20px";
-  p.style.top=(100+Math.random()*200)+"px";
+  p.style.top=(120+Math.random()*120)+"px";
+
   p.innerHTML=`
     <div class="bg-layer"></div>
     <div class="tools">
       <button onclick="bg(this)">BG</button>
-      <button onclick="addChar(this)">CHR</button>
-      <button onclick="addBubble(this)">TXT</button>
+      <button onclick="charAdd(this)">CHR</button>
     </div>
     <div class="history">
-      <button onclick="undo()">↶</button>
-      <button onclick="redo()">↷</button>
+      <button onclick="undoPanel()">↶</button>
+      <button onclick="redoPanel()">↷</button>
     </div>
-    <button class="delete-panel" onclick="del(this)">x</button>
-    <div class="caption">${text}</div>
+    <button class="delete-panel" onclick="removePanel(this)">x</button>
+    <div class="caption">${txt}</div>
     <div class="resize tl"></div>
     <div class="resize tr"></div>
     <div class="resize bl"></div>
@@ -255,16 +216,23 @@ function createPanel(text){
   `;
   enableDrag(p);
   enableResize(p);
-  return p;
+  c.appendChild(p);
+
+  document.getElementById("scene").value="";
+}
+
+function removePanel(btn){
+  snapshot();
+  btn.closest(".panel").remove();
 }
 
 function bg(btn){
+  snapshot();
   const p=btn.closest(".panel");
   const bg=p.querySelector(".bg-layer");
   const f=document.createElement("input");
   f.type="file";f.accept="image/*";
   f.onchange=e=>{
-    snapshot();
     const r=new FileReader();
     r.onload=x=>bg.style.backgroundImage=`url(${x.target.result})`;
     r.readAsDataURL(e.target.files[0]);
@@ -272,12 +240,12 @@ function bg(btn){
   f.click();
 }
 
-function addChar(btn){
+function charAdd(btn){
+  snapshot();
   const p=btn.closest(".panel");
   const f=document.createElement("input");
   f.type="file";f.accept="image/*";
   f.onchange=e=>{
-    snapshot();
     const img=document.createElement("img");
     img.src=URL.createObjectURL(e.target.files[0]);
     img.className="char-img";
@@ -286,57 +254,67 @@ function addChar(btn){
   f.click();
 }
 
-function addBubble(btn){
-  snapshot();
-  const p=btn.closest(".panel");
-  const b=document.createElement("div");
-  b.className="bubble";
-  b.contentEditable=true;
-  b.innerText="Say something...";
-  b.style.left="20px";
-  b.style.top="20px";
-  enableDrag(b);
-  p.appendChild(b);
-}
-
-function del(btn){snapshot();btn.closest(".panel").remove();}
-
-function enableDrag(el){
+function enableDrag(p){
   let sx,sy,ox,oy;
-  el.onmousedown=e=>{
+  p.addEventListener("mousedown",e=>{
     if(e.target.classList.contains("resize"))return;
     sx=e.clientX; sy=e.clientY;
-    ox=el.offsetLeft; oy=el.offsetTop;
+    ox=p.offsetLeft; oy=p.offsetTop;
     document.onmousemove=ev=>{
-      el.style.left=(ox+(ev.clientX-sx))+"px";
-      el.style.top=(oy+(ev.clientY-sy))+"px";
+      p.style.left=(ox+(ev.clientX-sx))+"px";
+      p.style.top=(oy+(ev.clientY-sy))+"px";
     };
-    document.onmouseup=()=>{document.onmousemove=null;}
-  };
-}
-
-function enableResize(p){
-  let sx,sy,sw,sh,sl,st;
-  p.querySelectorAll(".resize").forEach(h=>{
-    h.onmousedown=e=>{
-      e.preventDefault();
-      sx=e.clientX; sy=e.clientY;
-      sw=p.offsetWidth; sh=p.offsetHeight;
-      sl=p.offsetLeft; st=p.offsetTop;
-      document.onmousemove=ev=>{
-        const dx=ev.clientX-sx,dy=ev.clientY-sy;
-        if(h.classList.contains("br")){p.style.width=(sw+dx)+"px";p.style.height=(sh+dy)+"px";}
-        if(h.classList.contains("bl")){p.style.width=(sw-dx)+"px";p.style.left=(sl+dx)+"px";p.style.height=(sh+dy)+"px";}
-        if(h.classList.contains("tr")){p.style.width=(sw+dx)+"px";p.style.height=(sh-dy)+"px";p.style.top=(st+dy)+"px";}
-        if(h.classList.contains("tl")){p.style.width=(sw-dx)+"px";p.style.left=(sl+dx)+"px";p.style.height=(sh-dy)+"px";p.style.top=(st+dy)+"px";}
-      };
-      document.onmouseup=()=>{document.onmousemove=null;}
+    document.onmouseup=()=>{
+      document.onmousemove=null;
+      snapshot();
     };
   });
 }
 
-function restore(){document.querySelectorAll(".panel").forEach(p=>{enableDrag(p);enableResize(p);});}
+function enableResize(p){
+  p.querySelectorAll('.resize').forEach(h=>{
+    h.addEventListener("mousedown",e=>{
+      e.preventDefault();
+      let sx=e.clientX, sy=e.clientY;
+      let sw=p.offsetWidth, sh=p.offsetHeight;
+      let sl=p.offsetLeft, st=p.offsetTop;
+      document.onmousemove=ev=>{
+        const dx=ev.clientX-sx, dy=ev.clientY-sy;
+        if(h.classList.contains('br')){
+          p.style.width=(sw+dx)+"px";
+          p.style.height=(sh+dy)+"px";
+        }
+        if(h.classList.contains('bl')){
+          p.style.width=(sw-dx)+"px";
+          p.style.left=(sl+dx)+"px";
+          p.style.height=(sh+dy)+"px";
+        }
+        if(h.classList.contains('tr')){
+          p.style.width=(sw+dx)+"px";
+          p.style.height=(sh-dy)+"px";
+          p.style.top=(st+dy)+"px";
+        }
+        if(h.classList.contains('tl')){
+          p.style.width=(sw-dx)+"px";
+          p.style.left=(sl+dx)+"px";
+          p.style.height=(sh-dy)+"px";
+          p.style.top=(st+dy)+"px";
+        }
+      };
+      document.onmouseup=()=>{
+        document.onmousemove=null;
+        snapshot();
+      };
+    });
+  });
+}
 
+function restoreEvents(){
+  document.querySelectorAll(".panel").forEach(p=>{
+    enableDrag(p);
+    enableResize(p);
+  });
+}
 </script>
 
 </body>
