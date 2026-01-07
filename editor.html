@@ -47,21 +47,6 @@ body{
   text-align:center;
 }
 
-/* UNDO button */
-.undo-btn{
-  position:fixed;
-  top:14px;
-  right:14px;
-  background:white;
-  color:#000;
-  border:none;
-  padding:6px 12px;
-  border-radius:6px;
-  font-size:0.9rem;
-  font-weight:700;
-  z-index:10;
-}
-
 /* PANEL */
 .panel{
   width:100%;
@@ -80,7 +65,6 @@ body{
   inset:0;
   background-size:cover;
   background-position:center;
-  opacity:1;
   z-index:1;
 }
 
@@ -93,12 +77,12 @@ body{
   z-index:2;
 }
 
+/* Caption */
 .caption{
   position:absolute;
   bottom:0;
   left:0;
   width:100%;
-  min-height:50px;
   background:rgba(0,0,0,0.65);
   color:white;
   padding:8px 10px;
@@ -106,6 +90,7 @@ body{
   z-index:3;
 }
 
+/* Tools */
 .tools{
   position:absolute;
   left:6px;
@@ -123,26 +108,25 @@ body{
   border-radius:4px;
 }
 
-/* DRAG */
-.panel.dragging{
-  opacity:0.6;
-}
-
-/* RESIZE */
-.resize-bar{
+/* Per panel Undo/Redo */
+.history-controls{
   position:absolute;
-  bottom:-16px;
-  left:0;
-  width:100%;
-  height:20px;
-  background:#ddd;
-  cursor:ns-resize;
-  text-align:center;
-  font-size:11px;
-  z-index:6;
-  user-select:none;
+  bottom:26px;
+  left:4px;
+  display:flex;
+  gap:4px;
+  z-index:8;
+}
+.history-controls button{
+  padding:2px 6px;
+  font-size:10px;
+  background:#444;
+  color:white;
+  border:none;
+  border-radius:4px;
 }
 
+/* Delete */
 .delete-panel{
   position:absolute;
   right:6px;
@@ -156,7 +140,24 @@ body{
   z-index:7;
 }
 
-/* Add Scene Button */
+/* Resize both ways */
+.resize-bar{
+  position:absolute;
+  bottom:0;
+  right:0;
+  width:18px;
+  height:18px;
+  background:#bbb;
+  cursor:nwse-resize;
+  z-index:10;
+}
+
+/* Drag appearance */
+.panel.dragging{
+  opacity:0.6;
+}
+
+/* Add button */
 .add-panel{
   width:100%;
   padding:12px;
@@ -169,7 +170,7 @@ body{
   margin-top:10px;
 }
 
-/* INPUT BAR */
+/* Input bar */
 .input-bar{
   position:fixed;
   bottom:0;
@@ -200,10 +201,10 @@ body{
 }
 </style>
 </head>
+
 <body>
 
 <div class="topbar">📜 Create Your Manhwa</div>
-<button class="undo-btn" onclick="undo()">Undo</button>
 
 <div class="page-wrapper">
   <div class="page" id="page">
@@ -217,42 +218,40 @@ body{
 </div>
 
 <script>
-let resizing=false, activePanel=null,startY=0,startH=0;
+let resizing=false, resizePanel=null,startX=0,startY=0,startW=0,startH=0;
 let dragPanel=null, startPosY=0;
-let historyStack=[];
+let history=[];
+let redoStack=[];
 
-/* SAVE HISTORY */
+/* PUSH HISTORY */
 function pushHistory(){
   const state=localStorage.getItem("manhwa");
   if(state){
-    historyStack.push(state);
-    if(historyStack.length>50)historyStack.shift();
+    history.push(state);
+    redoStack=[];
+    if(history.length>60)history.shift();
   }
 }
 
-/* UNDO */
-function undo(){
-  if(historyStack.length===0){
-    alert("Nothing to undo");
-    return;
-  }
-  const last=historyStack.pop();
+/* PER PANEL UNDO */
+function undo(btn){
+  if(history.length===0)return;
+  redoStack.push(localStorage.getItem("manhwa"));
+  const last=history.pop();
   localStorage.setItem("manhwa",last);
-  document.getElementById("page").innerHTML='<button class="add-panel" onclick="addPanel()">+ Add Scene</button>';
-  loadAll();
+  reload();
 }
 
-/* CREATE FROM TEXT */
-function createFromText(){
-  const input=document.getElementById("scene-text");
-  const text=input.value.trim();
-  if(!text)return;
-  addPanel({text});
-  input.value="";
-  saveAll();
+/* PER PANEL REDO */
+function redo(btn){
+  if(redoStack.length===0)return;
+  history.push(localStorage.getItem("manhwa"));
+  const next=redoStack.pop();
+  localStorage.setItem("manhwa",next);
+  reload();
 }
 
-/* PANEL BUILDER */
+/* BUILD NEW PANEL */
 function newPanel(data={}){
   const panel=document.createElement("div");
   panel.className="panel";
@@ -271,10 +270,13 @@ function newPanel(data={}){
 
   const tools=document.createElement("div");
   tools.className="tools";
-  tools.innerHTML=`
-    <button onclick="uploadBG(this)">BG</button>
-    <button onclick="uploadChar(this)">CHR</button>
-  `;
+  tools.innerHTML=`<button onclick="uploadBG(this)">BG</button>
+                   <button onclick="uploadChar(this)">CHR</button>`;
+
+  const controls=document.createElement("div");
+  controls.className="history-controls";
+  controls.innerHTML=`<button onclick="undo()">↶</button>
+                      <button onclick="redo()">↷</button>`;
 
   const del=document.createElement("button");
   del.className="delete-panel";
@@ -283,12 +285,12 @@ function newPanel(data={}){
 
   const resize=document.createElement("div");
   resize.className="resize-bar";
-  resize.innerText="⇕";
   resize.addEventListener("mousedown",startResize);
   resize.addEventListener("touchstart",startResize,{passive:false});
 
   panel.appendChild(bg);
   panel.appendChild(tools);
+  panel.appendChild(controls);
   panel.appendChild(caption);
   panel.appendChild(del);
   panel.appendChild(resize);
@@ -312,13 +314,24 @@ function addPanel(data={}){
   saveAll();
 }
 
-/* BG Upload */
+/* INPUT CREATE */
+function createFromText(){
+  const input=document.getElementById("scene-text");
+  const text=input.value.trim();
+  if(!text)return;
+  addPanel({text});
+  input.value="";
+  saveAll();
+}
+
+/* BG UPLOAD */
 function uploadBG(btn){
   const panel=btn.closest(".panel");
   const bg=panel.querySelector(".bg-layer");
   const input=document.createElement("input");
   input.type="file";input.accept="image/*";
   input.onchange=e=>{
+    pushHistory();
     const reader=new FileReader();
     reader.onload=ev=>{bg.style.backgroundImage=`url(${ev.target.result})`;saveAll();};
     reader.readAsDataURL(e.target.files[0]);
@@ -326,12 +339,13 @@ function uploadBG(btn){
   input.click();
 }
 
-/* Char Upload */
+/* CHAR UPLOAD */
 function uploadChar(btn){
   const panel=btn.closest(".panel");
   const input=document.createElement("input");
   input.type="file";input.accept="image/*";
   input.onchange=e=>{
+    pushHistory();
     const reader=new FileReader();
     reader.onload=ev=>{
       const img=document.createElement("img");
@@ -345,50 +359,57 @@ function uploadChar(btn){
   input.click();
 }
 
-/* SAVE PANELS */
+/* SAVE */
 function saveAll(){
   pushHistory();
-  const panels=[...document.querySelectorAll(".panel")].map(p=>{
+  const data=[...document.querySelectorAll(".panel")].map(p=>{
     const char=p.querySelector(".char-img");
     return{
       text:p.querySelector(".caption").innerText,
       bg:p.querySelector(".bg-layer").style.backgroundImage.replace('url("','').replace('")',''),
       char:char?char.src:"",
-      height:p.style.minHeight
+      height:p.style.minHeight,
     };
   });
-  localStorage.setItem("manhwa",JSON.stringify(panels));
+  localStorage.setItem("manhwa",JSON.stringify(data));
 }
 
-/* LOAD PANELS */
-function loadAll(){
+/* LOAD */
+function reload(){
+  document.getElementById("page").innerHTML='<button class="add-panel" onclick="addPanel()">+ Add Scene</button>';
   JSON.parse(localStorage.getItem("manhwa")||"[]").forEach(p=>addPanel(p));
 }
-loadAll();
+reload();
 
-/* --------- RESIZE --------- */
+/* RESIZE BOTH DIRECTIONS */
 function startResize(e){
   e.preventDefault();
+  resizePanel=this.parentNode;
   resizing=true;
-  activePanel=this.parentNode;
+  startX=e.touches?e.touches[0].clientX:e.clientX;
   startY=e.touches?e.touches[0].clientY:e.clientY;
-  startH=activePanel.offsetHeight;
+  startW=resizePanel.offsetWidth;
+  startH=resizePanel.offsetHeight;
 }
 
 document.addEventListener("mousemove",e=>{
   if(!resizing)return;
-  activePanel.style.minHeight=Math.max(160,startH+(e.clientY-startY))+"px";
+  const dx=e.clientX-startX;
+  const dy=e.clientY-startY;
+  resizePanel.style.minHeight=Math.max(160,startH+dy)+"px";
 });
 
 document.addEventListener("touchmove",e=>{
   if(!resizing)return;
-  activePanel.style.minHeight=Math.max(160,startH+(e.touches[0].clientY-startY))+"px";
+  const dx=e.touches[0].clientX-startX;
+  const dy=e.touches[0].clientY-startY;
+  resizePanel.style.minHeight=Math.max(160,startH+dy)+"px";
 });
 
 document.addEventListener("mouseup",()=>{resizing=false;saveAll();});
 document.addEventListener("touchend",()=>{resizing=false;saveAll();});
 
-/* --------- DRAG REORDER --------- */
+/* DRAG REORDER */
 function startDrag(e){
   if(e.target.classList.contains("resize-bar"))return;
   dragPanel=this;
@@ -429,6 +450,5 @@ function stopDrag(){
   document.removeEventListener("touchend",stopDrag);
 }
 </script>
-
 </body>
 </html>
