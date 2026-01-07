@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Manhwa Editor</title>
+<title>Manhwa Free Canvas Editor</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
 *{box-sizing:border-box;touch-action:none}
@@ -10,197 +10,107 @@
 body{
   margin:0;
   font-family:"Segoe UI", Arial, sans-serif;
-  min-height:100vh;
   background:
     radial-gradient(circle at 10% 20%, #ff9a9e, transparent 40%),
     radial-gradient(circle at 90% 30%, #fad0c4, transparent 40%),
     radial-gradient(circle at 50% 80%, #fbc2eb, transparent 45%),
     linear-gradient(135deg,#a18cd1,#fbc2eb);
-  overflow-x:hidden;
+  overflow:hidden;
 }
 
-.page-wrapper{
-  display:flex;
-  justify-content:center;
-  padding:90px 20px 90px;
+/* FREE DRAG CANVAS */
+.canvas{
+  position:relative;
   width:100%;
+  height:100vh;
+  overflow:auto;
+  padding:90px 0 90px;
 }
 
-.page{
-  background:white;
-  width:380px;
-  min-height:85vh;
-  border-radius:20px;
-  padding:14px;
-  box-shadow:0 20px 30px rgba(0,0,0,0.25);
-}
-
+/* TITLE */
 .topbar{
   position:fixed;
-  top:0;left:0;
-  width:100%;
+  top:0;left:0;width:100%;
   padding:16px;
-  text-align:center;
   color:white;
+  text-align:center;
   font-size:1.4rem;
   font-weight:700;
+  z-index:1000;
 }
 
-/* PANEL */
+/**********************
+ PANEL = FREE SHAPE BOX
+***********************/
 .panel{
-  width:100%;
-  min-height:220px;
-  border:2px solid #000;
-  border-radius:10px;
-  margin-bottom:16px;
-  position:relative;
+  position:absolute;
+  top:120px;
+  left:20px;
+  width:300px;
+  height:200px;
+  border:3px solid #000;
+  background:white;
+  border-radius:6px;
   overflow:hidden;
-  background:#eeeeee;
-  touch-action:none;
-  transition:border .15s;
-}
-.panel.dragging{
-  opacity:0.6;
-  border-color:#ff5f6d;
+  z-index:5;
 }
 
-/* BG */
+/* BG layer only shows uploaded art */
 .bg-layer{
   position:absolute;
   inset:0;
   background-size:cover;
   background-position:center;
-  z-index:1;
 }
 
-/* CHARACTER */
-.char-img{
-  position:absolute;
-  bottom:0;
-  left:50%;
-  transform:translateX(-50%);
-  max-height:95%;
-  z-index:2;
-}
-
-/* CAPTION */
-.caption{
-  position:absolute;
-  bottom:0;
-  left:0;
-  width:100%;
-  padding:8px 10px;
-  min-height:46px;
-  background:rgba(0,0,0,0.7);
+/* tools */
+.tools{position:absolute;top:5px;left:5px;display:flex;gap:6px;z-index:10;}
+.tools button{
+  background:#111;
   color:white;
-  font-size:0.95rem;
-  z-index:4;
+  border:none;
+  font-size:10px;
+  padding:2px 6px;
+  border-radius:4px;
 }
 
-/* UNDO/REDO FIX — MOVE ABOVE CAPTION */
+/* undo redo bottom left */
 .history{
   position:absolute;
-  bottom:70px;        /* ⬅ moved higher */
-  left:6px;
-  display:flex;
-  gap:5px;
-  z-index:7;
+  bottom:8px;left:8px;
+  display:flex;gap:6px;
+  z-index:11;
 }
 .history button{
-  padding:2px 6px;
   font-size:10px;
-  background:#444;
+  background:#333;
   color:white;
   border:none;
+  padding:2px 6px;
   border-radius:4px;
 }
 
-/* TOOLS */
-.tools{
-  position:absolute;
-  top:6px;
-  left:6px;
-  display:flex;
-  gap:5px;
-  z-index:6;
-}
-.tools button{
-  padding:2px 6px;
-  font-size:10px;
-  border-radius:4px;
-  background:#222;
-  color:white;
-  border:none;
-}
-
-/* DELETE */
+/* delete */
 .delete-panel{
   position:absolute;
-  top:6px;
-  right:6px;
+  top:5px;right:5px;
   background:red;
   color:white;
   border:none;
-  font-size:11px;
-  padding:3px 6px;
   border-radius:4px;
-  z-index:7;
+  padding:3px 6px;
+  font-size:11px;
+  z-index:12;
 }
 
-/* WIDTH + HEIGHT RESIZE HANDLE — FIX */
-.resize-handle{
-  position:absolute;
-  bottom:0;
-  right:0;
-  width:22px;
-  height:22px;
-  background:#aaa;
-  border-top-left-radius:6px;
-  cursor:nwse-resize;
-  z-index:10;
+/* corner resize handles */
+.resize{
+  width:14px;height:14px;background:#555;position:absolute;z-index:20;
 }
-
-/* ADD BUTTON */
-.add-panel{
-  width:100%;
-  padding:12px;
-  margin-top:10px;
-  border:none;
-  border-radius:24px;
-  background:#ff5f6d;
-  color:white;
-  font-size:1rem;
-  font-weight:700;
-}
-
-/* INPUT BAR */
-.input-bar{
-  position:fixed;
-  bottom:0;
-  left:0;
-  width:100%;
-  padding:10px;
-  display:flex;
-  gap:8px;
-  border-top:2px solid #ccc;
-  background:white;
-}
-.input-bar input{
-  flex:1;
-  padding:12px;
-  border-radius:25px;
-  border:1px solid #ccc;
-  font-size:1rem;
-  outline:none;
-}
-.input-bar button{
-  padding:12px 20px;
-  border-radius:25px;
-  border:none;
-  background:#ff5f6d;
-  font-weight:700;
-  color:white;
-}
+.resize.br{right:0;bottom:0;cursor:nwse-resize;}
+.resize.bl{left:0;bottom:0;cursor:nesw-resize;}
+.resize.tr{right:0;top:0;cursor:nesw-resize;}
+.resize.tl{left:0;top:0;cursor:nwse-resize;}
 </style>
 </head>
 
@@ -208,222 +118,140 @@ body{
 
 <div class="topbar">📜 Create Your Manhwa</div>
 
-<div class="page-wrapper">
-  <div class="page" id="page">
-    <button class="add-panel" onclick="addPanel()">+ Add Scene</button>
-  </div>
-</div>
+<div class="canvas" id="canvas"></div>
 
-<div class="input-bar">
-  <input id="scene-text" placeholder="Write your scene...">
-  <button onclick="createFromText()">Create</button>
+<!-- input -->
+<div style="position:fixed;bottom:0;left:0;width:100%;
+ background:white;border-top:2px solid #ccc;
+ padding:10px;display:flex;gap:8px;">
+ <input id="scene" placeholder="Panel label (optional)" style="
+   flex:1;padding:12px;border-radius:25px;border:1px solid #ccc;">
+ <button onclick="addPanel()" style="
+   padding:12px 20px;background:#ff5f6d;border-radius:25px;border:none;
+   font-weight:700;color:white;">Add Scene</button>
 </div>
 
 <script>
-let history=[], redoStack=[];
+function addPanel(){
+  const txt=document.getElementById("scene").value.trim();
+  const c=document.getElementById("canvas");
 
-/* SAVE SNAPSHOT */
-function snapshot(){
-  const state=localStorage.getItem("manhwa");
-  if(state){
-    history.push(state);
-    redoStack=[];
-    if(history.length>50)history.shift();
-  }
-}
-
-/* UNDO & REDO */
-function undo(){ if(!history.length)return;
-  redoStack.push(localStorage.getItem("manhwa"));
-  localStorage.setItem("manhwa",history.pop());
-  reload();
-}
-function redo(){ if(!redoStack.length)return;
-  history.push(localStorage.getItem("manhwa"));
-  localStorage.setItem("manhwa",redoStack.pop());
-  reload();
-}
-
-/* BUILD PANEL */
-function newPanel(data={}){
   const p=document.createElement("div");
   p.className="panel";
+  p.style.left=(20+Math.random()*100)+"px";
+  p.style.top=(120+Math.random()*300)+"px";
 
-  const bg=document.createElement("div");
-  bg.className="bg-layer";
-  if(data.bg) bg.style.backgroundImage=`url(${data.bg})`;
+  p.innerHTML=`
+    <div class="bg-layer"></div>
 
-  const cap=document.createElement("div");
-  cap.className="caption";
-  cap.innerText=data.text||"New scene…";
+    <div class="tools">
+      <button onclick="pickBG(this)">BG</button>
+      <button onclick="addChar(this)">CHR</button>
+    </div>
 
-  const tools=document.createElement("div");
-  tools.className="tools";
-  tools.innerHTML=`<button onclick="addBG(this)">BG</button>
-                   <button onclick="addChar(this)">CHR</button>`;
+    <div class="history">
+      <button onclick="undoPanel(this)">↶</button>
+      <button onclick="redoPanel(this)">↷</button>
+    </div>
 
-  const hist=document.createElement("div");
-  hist.className="history";
-  hist.innerHTML=`<button onclick="undo()">↶</button>
-                  <button onclick="redo()">↷</button>`;
+    <button class="delete-panel" onclick="this.parentNode.remove()">X</button>
 
-  const del=document.createElement("button");
-  del.className="delete-panel";
-  del.innerText="x";
-  del.onclick=()=>{p.remove();saveAll();};
-
-  const resize=document.createElement("div");
-  resize.className="resize-handle";
-
-  p.append(bg,tools,hist,cap,del,resize);
-
-  /* apply character if exists */
-  if(data.char){
-    const img=document.createElement("img");
-    img.src=data.char;
-    img.className="char-img";
-    p.appendChild(img);
-  }
+    <!-- four resize corners -->
+    <div class="resize tl"></div>
+    <div class="resize tr"></div>
+    <div class="resize bl"></div>
+    <div class="resize br"></div>
+  `;
 
   enableDrag(p);
   enableResize(p);
-
-  return p;
+  c.appendChild(p);
+  document.getElementById("scene").value="";
 }
 
-/* ADD PANEL */
-function addPanel(data={}){
-  const pg=document.getElementById("page");
-  const btn=document.querySelector(".add-panel");
-  pg.insertBefore(newPanel(data),btn);
-  saveAll();
-}
-
-/* CREATE FROM TEXT */
-function createFromText(){
-  const input=document.getElementById("scene-text");
-  if(!input.value.trim())return;
-  addPanel({text:input.value});
-  input.value="";
-}
-
-/* UPLOAD BG */
-function addBG(btn){
+/****** BG upload ******/
+function pickBG(btn){
   const p=btn.closest(".panel");
   const bg=p.querySelector(".bg-layer");
-  const file=document.createElement("input");
-  file.type="file";file.accept="image/*";
-  file.onchange=e=>{
-    snapshot();
-    const r=new FileReader();
-    r.onload=x=>{bg.style.backgroundImage=`url(${x.target.result})`;saveAll();};
+  const f=document.createElement("input");
+  f.type="file"; f.accept="image/*";
+  f.onchange=e=>{
+    let r=new FileReader();
+    r.onload=x=>bg.style.backgroundImage=`url(${x.target.result})`;
     r.readAsDataURL(e.target.files[0]);
   };
-  file.click();
+  f.click();
 }
 
-/* ADD CHARACTER */
+/****** Character *****/
 function addChar(btn){
   const p=btn.closest(".panel");
-  const file=document.createElement("input");
-  file.type="file";file.accept="image/*";
-  file.onchange=e=>{
-    snapshot();
-    const r=new FileReader();
-    r.onload=x=>{
-      const img=document.createElement("img");
-      img.src=x.target.result;
-      img.className="char-img";
-      p.appendChild(img);
-      saveAll();
-    };
-    r.readAsDataURL(e.target.files[0]);
+  const f=document.createElement("input");
+  f.type="file"; f.accept="image/*";
+  f.onchange=e=>{
+    const img=document.createElement("img");
+    img.src=URL.createObjectURL(e.target.files[0]);
+    img.style.position="absolute";
+    img.style.bottom="0";
+    img.style.left="50%";
+    img.style.transform="translateX(-50%)";
+    img.style.maxHeight="95%";
+    img.style.zIndex="9";
+    p.appendChild(img);
   };
-  file.click();
+  f.click();
 }
 
-/* SAVE DATA */
-function saveAll(){
-  snapshot();
-  const arr=[...document.querySelectorAll(".panel")].map(p=>{
-    const char=p.querySelector(".char-img");
-    return{
-      text:p.querySelector(".caption").innerText,
-      bg:p.querySelector(".bg-layer").style.backgroundImage.replace('url("','').replace('")',''),
-      char:char?char.src:"",
-      height:p.style.minHeight
+/****** Drag free anywhere ******/
+function enableDrag(p){
+  let ox,oy,mx,my;
+  p.onmousedown=e=>{
+    if(e.target.classList.contains("resize"))return;
+    ox=p.offsetLeft;
+    oy=p.offsetTop;
+    mx=e.clientX;
+    my=e.clientY;
+    document.onmousemove=ev=>{
+      p.style.left=(ox+(ev.clientX-mx))+"px";
+      p.style.top=(oy+(ev.clientY-my))+"px";
+    };
+    document.onmouseup=()=>document.onmousemove=null;
+  };
+}
+
+/****** Resize in all directions ******/
+function enableResize(p){
+  let sx,sy,w,h;
+  p.querySelectorAll(".resize").forEach(hndl=>{
+    hndl.onmousedown=e=>{
+      e.preventDefault();
+      sx=e.clientX; sy=e.clientY;
+      w=p.offsetWidth; h=p.offsetHeight;
+      document.onmousemove=ev=>{
+        let dx=ev.clientX-sx, dy=ev.clientY-sy;
+        if(hndl.classList.contains("br")){
+          p.style.width=(w+dx)+"px"; p.style.height=(h+dy)+"px";
+        }
+        if(hndl.classList.contains("bl")){
+          p.style.width=(w-dx)+"px"; p.style.left=(p.offsetLeft+dx)+"px"; p.style.height=(h+dy)+"px";
+        }
+        if(hndl.classList.contains("tr")){
+          p.style.width=(w+dx)+"px"; p.style.height=(h-dy)+"px"; p.style.top=(p.offsetTop+dy)+"px";
+        }
+        if(hndl.classList.contains("tl")){
+          p.style.width=(w-dx)+"px"; p.style.left=(p.offsetLeft+dx)+"px"; 
+          p.style.height=(h-dy)+"px"; p.style.top=(p.offsetTop+dy)+"px";
+        }
+      };
+      document.onmouseup=()=>document.onmousemove=null;
     };
   });
-  localStorage.setItem("manhwa",JSON.stringify(arr));
 }
 
-/* LOAD */
-function reload(){
-  document.getElementById("page").innerHTML='<button class="add-panel" onclick="addPanel()">+ Add Scene</button>';
-  JSON.parse(localStorage.getItem("manhwa")||"[]").forEach(p=>addPanel(p));
-}
-reload();
+/**** placeholder undo/redo ****/
+function undoPanel(){alert("undo later")}
+function redoPanel(){alert("redo later")}
 
-/* ENABLE RESIZE WIDTH + HEIGHT */
-function enableResize(panel){
-  let sx,sy,sw,sh;
-  const h=panel.querySelector(".resize-handle");
-
-  const start=e=>{
-    e.preventDefault();
-    sx=e.clientX; sy=e.clientY;
-    sw=panel.offsetWidth; sh=panel.offsetHeight;
-    document.addEventListener("mousemove",move);
-    document.addEventListener("touchmove",move,{passive:false});
-    document.addEventListener("mouseup",stop);
-    document.addEventListener("touchend",stop);
-  };
-  const move=e=>{
-    const x=e.touches?e.touches[0].clientX:e.clientX;
-    const y=e.touches?e.touches[0].clientY:e.clientY;
-    panel.style.width=Math.max(200,sw+(x-sx))+"px";
-    panel.style.minHeight=Math.max(160,sh+(y-sy))+"px";
-  };
-  const stop=()=>{
-    document.removeEventListener("mousemove",move);
-    document.removeEventListener("touchmove",move);
-    saveAll();
-  };
-
-  h.addEventListener("mousedown",start);
-  h.addEventListener("touchstart",start,{passive:false});
-}
-
-/* ENABLE DRAG */
-function enableDrag(panel){
-  let startY,startX;
-  const start=e=>{
-    if(e.target.classList.contains("resize-handle"))return;
-    panel.classList.add("dragging");
-    startX=e.touches?e.touches[0].clientX:e.clientX;
-    startY=e.touches?e.touches[0].clientY:e.clientY;
-    document.addEventListener("mousemove",move);
-    document.addEventListener("touchmove",move,{passive:false});
-    document.addEventListener("mouseup",stop);
-    document.addEventListener("touchend",stop);
-  };
-  const move=e=>{
-    const x=e.touches?e.touches[0].clientX:e.clientX;
-    const y=e.touches?e.touches[0].clientY:e.clientY;
-    panel.style.left=(panel.offsetLeft+(x-startX))+"px";
-    panel.style.top=(panel.offsetTop+(y-startY))+"px";
-    startX=x;startY=y;
-  };
-  const stop=()=>{
-    panel.classList.remove("dragging");
-    saveAll();
-    document.removeEventListener("mousemove",move);
-    document.removeEventListener("touchmove",move);
-  };
-
-  panel.addEventListener("mousedown",start);
-  panel.addEventListener("touchstart",start,{passive:false});
-}
 </script>
 </body>
 </html>
