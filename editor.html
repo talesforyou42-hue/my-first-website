@@ -2,256 +2,335 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Manhwa Free Canvas Editor</title>
+<title>Manhwa Page Mode Editor</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
-*{box-sizing:border-box;touch-action:none}
+*{box-sizing:border-box;touch-action:none;margin:0;padding:0}
 
 body{
-  margin:0;
   font-family:"Segoe UI", Arial, sans-serif;
   background:
     radial-gradient(circle at 10% 20%, #ff9a9e, transparent 40%),
     radial-gradient(circle at 90% 30%, #fad0c4, transparent 40%),
     radial-gradient(circle at 50% 80%, #fbc2eb, transparent 45%),
     linear-gradient(135deg,#a18cd1,#fbc2eb);
-  overflow:hidden;
+  overflow-x:hidden;
+  padding-top:70px;
 }
 
-/* FREE DRAG CANVAS */
-.canvas{
-  position:relative;
-  width:100%;
-  height:100vh;
-  overflow:auto;
-  padding:90px 0 90px;
-}
-
-/* TITLE */
+/* TOPBAR */
 .topbar{
   position:fixed;
   top:0;left:0;width:100%;
   padding:16px;
-  color:white;
   text-align:center;
   font-size:1.4rem;
+  color:white;
   font-weight:700;
   z-index:1000;
 }
 
-/**********************
- PANEL = FREE SHAPE BOX
-***********************/
+/* BUTTONS */
+button{
+  cursor:pointer;
+}
+
+/* PAGE CONTAINER */
+#pages{
+  width:100%;
+  display:flex;
+  flex-direction:column;
+  gap:40px;
+  padding-bottom:120px;
+}
+
+/* EACH PAGE */
+.page{
+  width:380px;
+  min-height:800px;
+  background:white;
+  box-shadow:0 0 25px rgba(0,0,0,0.25);
+  border-radius:18px;
+  margin:0 auto;
+  position:relative;
+  overflow:hidden;
+  border:3px solid #000;
+}
+
+/* PAGE LABEL */
+.page-label{
+  text-align:center;
+  font-weight:700;
+  padding:6px;
+  border-bottom:2px solid #000;
+}
+
+/* PAGE BUTTON BAR */
+.page-tools{
+  position:absolute;
+  top:6px;right:6px;
+  display:flex;
+  gap:6px;
+  z-index:20;
+}
+.page-tools button{
+  font-size:11px;
+  padding:4px 6px;
+  border:none;
+  border-radius:4px;
+  background:#222;
+  color:white;
+}
+
+/* PANEL */
 .panel{
   position:absolute;
   top:120px;
   left:20px;
-  width:300px;
-  height:200px;
-  border:3px solid #000;
-  background:white;
-  border-radius:6px;
+  width:200px;
+  height:160px;
+  border:2px solid #000;
+  border-radius:8px;
   overflow:hidden;
+  background:#eee;
   z-index:5;
 }
 
-/* BG layer only shows uploaded art */
+/* BG */
 .bg-layer{
   position:absolute;
   inset:0;
   background-size:cover;
   background-position:center;
+  z-index:1;
 }
 
-/* tools */
-.tools{position:absolute;top:5px;left:5px;display:flex;gap:6px;z-index:10;}
-.tools button{
-  background:#111;
-  color:white;
-  border:none;
-  font-size:10px;
-  padding:2px 6px;
-  border-radius:4px;
-}
-
-/* undo redo bottom left */
-.history{
+/* CHARACTER IMG */
+.char-img{
   position:absolute;
-  bottom:8px;left:8px;
-  display:flex;gap:6px;
-  z-index:11;
-}
-.history button{
-  font-size:10px;
-  background:#333;
-  color:white;
-  border:none;
-  padding:2px 6px;
-  border-radius:4px;
+  bottom:0;
+  left:50%;
+  transform:translateX(-50%);
+  max-height:90%;
+  z-index:2;
 }
 
-/* delete */
+/* CAPTION BOTTOM */
+.caption{
+  position:absolute;
+  bottom:0;
+  background:rgba(0,0,0,0.7);
+  width:100%;
+  color:white;
+  padding:6px;
+  font-size:12px;
+  z-index:3;
+  text-align:center;
+}
+
+/* PANEL TOOLS */
+.tools{
+  position:absolute;top:4px;left:4px;
+  display:flex;gap:4px;z-index:6;
+}
+.tools button{
+  font-size:10px;
+  padding:2px 4px;
+  border:none;border-radius:3px;
+  background:#111;color:white;
+}
+
+/* DELETE */
 .delete-panel{
   position:absolute;
-  top:5px;right:5px;
-  background:red;
-  color:white;
-  border:none;
-  border-radius:4px;
-  padding:3px 6px;
-  font-size:11px;
-  z-index:12;
+  top:4px;right:4px;
+  background:red;color:white;
+  font-size:11px;padding:2px 5px;
+  border:none;border-radius:3px;
+  z-index:7;
 }
 
-/* corner resize handles */
+/* RESIZE HANDLE */
 .resize{
-  width:14px;height:14px;background:#555;position:absolute;z-index:20;
+  position:absolute;
+  width:16px;height:16px;
+  background:#666;
+  right:0;bottom:0;
+  border-top-left-radius:4px;
+  cursor:nwse-resize;
+  z-index:8;
 }
-.resize.br{right:0;bottom:0;cursor:nwse-resize;}
-.resize.bl{left:0;bottom:0;cursor:nesw-resize;}
-.resize.tr{right:0;top:0;cursor:nesw-resize;}
-.resize.tl{left:0;top:0;cursor:nwse-resize;}
+
+/* ADD PANEL BUTTON */
+.add-panel-btn{
+  width:100%;
+  padding:10px;
+  border:none;
+  background:#ff5f6d;
+  color:white;
+  font-size:1rem;
+  border-radius:8px;
+  font-weight:700;
+  margin-top:10px;
+}
+
+/* INPUT BAR */
+.input-bar{
+  position:fixed;
+  bottom:0;left:0;
+  width:100%;
+  background:white;
+  border-top:2px solid #ccc;
+  display:flex;
+  gap:8px;
+  padding:10px;
+}
+.input-bar input{
+  flex:1;
+  padding:12px;
+  border-radius:20px;
+  border:1px solid #bbb;
+  font-size:1rem;
+}
+.input-bar button{
+  padding:12px 20px;
+  border:none;
+  background:#ff5f6d;
+  border-radius:20px;
+  font-weight:700;
+  color:white;
+}
 </style>
 </head>
 
 <body>
 
-<div class="topbar">📜 Create Your Manhwa</div>
+<div class="topbar">📜 Create Your Manhwa Pages</div>
 
-<div class="canvas" id="canvas"></div>
+<div id="pages"></div>
 
-<!-- input -->
-<div style="position:fixed;bottom:0;left:0;width:100%;
- background:white;border-top:2px solid #ccc;
- padding:10px;display:flex;gap:8px;">
- <input id="scene" placeholder="Panel label (optional)" style="
-   flex:1;padding:12px;border-radius:25px;border:1px solid #ccc;">
- <button onclick="addPanel()" style="
-   padding:12px 20px;background:#ff5f6d;border-radius:25px;border:none;
-   font-weight:700;color:white;">Add Scene</button>
+<!-- ADD PAGE BUTTON -->
+<div style="text-align:center;margin:20px 0;">
+  <button onclick="addPage()" class="add-panel-btn">➕ Add Page</button>
+</div>
+
+<!-- INPUT BAR -->
+<div class="input-bar">
+  <input id="scene-text" placeholder="Write caption...">
+  <button onclick="addPanelToLast()">+ Panel</button>
 </div>
 
 <script>
-function addPanel(){
-  const txt=document.getElementById("scene").value.trim();
-  const c=document.getElementById("canvas");
+let pages=[];
+let lastPage=null;
 
-  const p=document.createElement("div");
-  p.className="panel";
-  p.style.left=(20+Math.random()*100)+"px";
-  p.style.top=(120+Math.random()*300)+"px";
-
-  p.innerHTML=`
-    <div class="bg-layer"></div>
-
-    <div class="tools">
-      <button onclick="pickBG(this)">BG</button>
-      <button onclick="addChar(this)">CHR</button>
+/* ADD NEW PAGE */
+function addPage(){
+  const idx=pages.length+1;
+  const pg=document.createElement("div");
+  pg.className="page";
+  pg.innerHTML=`
+    <div class="page-label">PAGE ${idx}</div>
+    <div class="page-tools">
+      <button onclick="deletePage(this)">DEL</button>
     </div>
-
-    <div class="history">
-      <button onclick="undoPanel(this)">↶</button>
-      <button onclick="redoPanel(this)">↷</button>
-    </div>
-
-    <button class="delete-panel" onclick="this.parentNode.remove()">X</button>
-
-    <!-- four resize corners -->
-    <div class="resize tl"></div>
-    <div class="resize tr"></div>
-    <div class="resize bl"></div>
-    <div class="resize br"></div>
   `;
-
-  enableDrag(p);
-  enableResize(p);
-  c.appendChild(p);
-  document.getElementById("scene").value="";
+  document.getElementById("pages").appendChild(pg);
+  pages.push(pg);
+  lastPage=pg;
 }
 
-/****** BG upload ******/
-function pickBG(btn){
+/* DELETE PAGE */
+function deletePage(btn){
+  const pg=btn.closest(".page");
+  pg.remove();
+}
+
+/* ADD PANEL TO LAST PAGE */
+function addPanelToLast(){
+  if(!lastPage)addPage();
+  const txt=document.getElementById("scene-text").value.trim()||"New scene";
+  const p=document.createElement("div");
+  p.className="panel";
+  p.innerHTML=`
+    <div class="bg-layer"></div>
+    <div class="tools">
+      <button onclick="bg(this)">BG</button>
+      <button onclick="charAdd(this)">CHR</button>
+    </div>
+    <div class="caption">${txt}</div>
+    <button class="delete-panel" onclick="this.closest('.panel').remove()">x</button>
+    <div class="resize"></div>
+  `;
+  enableDrag(p,lastPage);
+  enableResize(p);
+  lastPage.appendChild(p);
+  document.getElementById("scene-text").value="";
+}
+
+/* DRAG PANELS */
+function enableDrag(p,container){
+  let sx,sy;
+  p.onmousedown=e=>{
+    if(e.target.classList.contains("resize"))return;
+    sx=e.clientX; sy=e.clientY;
+    const rect=p.getBoundingClientRect();
+    const offsetX=sx-rect.left;
+    const offsetY=sy-rect.top;
+    document.onmousemove=e2=>{
+      const cx=e2.clientX-offsetX;
+      const cy=e2.clientY-offsetY-window.scrollY;
+      p.style.left=cx+"px";
+      p.style.top=cy+"px";
+    };
+    document.onmouseup=()=>{document.onmousemove=null;}
+  };
+}
+
+/* RESIZE */
+function enableResize(p){
+  const h=p.querySelector(".resize");
+  let sx,sy,sw,sh;
+  h.onmousedown=e=>{
+    e.preventDefault();
+    sx=e.clientX; sy=e.clientY;
+    sw=p.offsetWidth; sh=p.offsetHeight;
+    document.onmousemove=e2=>{
+      p.style.width=(sw+(e2.clientX-sx))+"px";
+      p.style.height=(sh+(e2.clientY-sy))+"px";
+    };
+    document.onmouseup=()=>document.onmousemove=null;
+  };
+}
+
+/* BG UPLOAD */
+function bg(btn){
   const p=btn.closest(".panel");
   const bg=p.querySelector(".bg-layer");
   const f=document.createElement("input");
   f.type="file"; f.accept="image/*";
   f.onchange=e=>{
-    let r=new FileReader();
+    const r=new FileReader();
     r.onload=x=>bg.style.backgroundImage=`url(${x.target.result})`;
     r.readAsDataURL(e.target.files[0]);
   };
   f.click();
 }
 
-/****** Character *****/
-function addChar(btn){
+/* ADD CHARACTER */
+function charAdd(btn){
   const p=btn.closest(".panel");
   const f=document.createElement("input");
   f.type="file"; f.accept="image/*";
   f.onchange=e=>{
     const img=document.createElement("img");
     img.src=URL.createObjectURL(e.target.files[0]);
-    img.style.position="absolute";
-    img.style.bottom="0";
-    img.style.left="50%";
-    img.style.transform="translateX(-50%)";
-    img.style.maxHeight="95%";
-    img.style.zIndex="9";
+    img.className="char-img";
     p.appendChild(img);
   };
   f.click();
 }
-
-/****** Drag free anywhere ******/
-function enableDrag(p){
-  let ox,oy,mx,my;
-  p.onmousedown=e=>{
-    if(e.target.classList.contains("resize"))return;
-    ox=p.offsetLeft;
-    oy=p.offsetTop;
-    mx=e.clientX;
-    my=e.clientY;
-    document.onmousemove=ev=>{
-      p.style.left=(ox+(ev.clientX-mx))+"px";
-      p.style.top=(oy+(ev.clientY-my))+"px";
-    };
-    document.onmouseup=()=>document.onmousemove=null;
-  };
-}
-
-/****** Resize in all directions ******/
-function enableResize(p){
-  let sx,sy,w,h;
-  p.querySelectorAll(".resize").forEach(hndl=>{
-    hndl.onmousedown=e=>{
-      e.preventDefault();
-      sx=e.clientX; sy=e.clientY;
-      w=p.offsetWidth; h=p.offsetHeight;
-      document.onmousemove=ev=>{
-        let dx=ev.clientX-sx, dy=ev.clientY-sy;
-        if(hndl.classList.contains("br")){
-          p.style.width=(w+dx)+"px"; p.style.height=(h+dy)+"px";
-        }
-        if(hndl.classList.contains("bl")){
-          p.style.width=(w-dx)+"px"; p.style.left=(p.offsetLeft+dx)+"px"; p.style.height=(h+dy)+"px";
-        }
-        if(hndl.classList.contains("tr")){
-          p.style.width=(w+dx)+"px"; p.style.height=(h-dy)+"px"; p.style.top=(p.offsetTop+dy)+"px";
-        }
-        if(hndl.classList.contains("tl")){
-          p.style.width=(w-dx)+"px"; p.style.left=(p.offsetLeft+dx)+"px"; 
-          p.style.height=(h-dy)+"px"; p.style.top=(p.offsetTop+dy)+"px";
-        }
-      };
-      document.onmouseup=()=>document.onmousemove=null;
-    };
-  });
-}
-
-/**** placeholder undo/redo ****/
-function undoPanel(){alert("undo later")}
-function redoPanel(){alert("redo later")}
-
 </script>
+
 </body>
 </html>
