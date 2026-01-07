@@ -48,20 +48,27 @@ body{
   font-size:1.4rem;
 }
 
-/* PANEL */
+/* PANEL — 🔥 Smoky Manhwa Look */
 .panel{
   width:100%;
   min-height:160px;
-  border:2px solid black;
+  border:2px solid #222;
   border-radius:6px;
-  background-size:cover;
-  background-position:center;
-  background-color:#f9f9f9;
   margin-bottom:14px;
   position:relative;
   overflow:hidden;
   font-size:0.95rem;
   padding-bottom:26px;
+
+  background:linear-gradient(
+      to bottom right,
+      rgba(255,255,255,0.92),
+      rgba(235,235,235,0.88),
+      rgba(210,210,210,0.80)
+  );
+  backdrop-filter: blur(2px);
+  background-size:cover;
+  background-position:center;
 }
 
 /* Text */
@@ -70,13 +77,14 @@ body{
   height:100%;
   padding:10px;
   outline:none;
-  color:white;
+  color:#111;
+  font-weight:500;
   z-index:2;
   position:relative;
-  text-shadow:0 0 4px black;
+  text-shadow:none;
 }
 
-/* Character image */
+/* Character PNG */
 .char-img{
   position:absolute;
   bottom:0;
@@ -200,7 +208,7 @@ function stopResize(){
   resizing=false;
   activePanel=null;
   document.body.style.overflow="auto";
-  saveAll(); // save after resize
+  saveAll();
 }
 
 /* ------------ PANEL CREATION ------------ */
@@ -222,7 +230,6 @@ function newPanel(data={}){
   `;
   panel.innerHTML=html;
 
-  // Add character if exists
   if(data.char){
     const img=document.createElement("img");
     img.src=data.char;
@@ -241,13 +248,13 @@ function addPanel(data={}){
   saveAll();
 }
 
-/* ------------ DELETE PANEL ------------ */
+/* DELETE */
 function deletePanel(btn){
   btn.parentNode.remove();
   saveAll();
 }
 
-/* ------------ BG Upload ------------ */
+/* BG Upload */
 function uploadBG(btn){
   const panel=btn.closest(".panel");
   const file=document.createElement("input");
@@ -265,7 +272,7 @@ function uploadBG(btn){
   file.click();
 }
 
-/* ------------ Character Upload ------------ */
+/* CHAR Upload */
 function uploadChar(btn){
   const panel=btn.closest(".panel");
   const file=document.createElement("input");
@@ -286,19 +293,14 @@ function uploadChar(btn){
   file.click();
 }
 
-/* ------------ AI Button ------------ */
+/* AI BUTTON */
 function aiGen(btn){
   const panel=btn.closest(".panel");
-  panel.style.backgroundImage="none";
   panel.querySelector(".editor-box").innerText+="\n[AI: Scene Pending]";
   saveAll();
-  /* Later:
-     fetch('/api/generate', {text...})
-     .then(img=>{ panel.style.backgroundImage = ... })
-  */
 }
 
-/* ------------ SAVE ALL ------------ */
+/* SAVE */
 function saveAll(){
   const panels=[...document.querySelectorAll(".panel")].map(p=>{
     const char=p.querySelector(".char-img");
@@ -312,7 +314,7 @@ function saveAll(){
   localStorage.setItem("manhwa",JSON.stringify(panels));
 }
 
-/* ------------ LOAD ALL ------------ */
+/* LOAD */
 function loadAll(){
   const page=document.getElementById("page");
   const saved=JSON.parse(localStorage.getItem("manhwa")||"[]");
@@ -324,7 +326,7 @@ function loadAll(){
 }
 loadAll();
 
-/* ------------ CLEAR ------------ */
+/* CLEAR */
 function clearAll(){
   localStorage.removeItem("manhwa");
   document.getElementById("page").innerHTML="";
